@@ -18,8 +18,10 @@
     
     <!-- 使用侧边栏组件 -->
     <SidebarMenu 
-      v-model="showSidebar"
-      v-model:darkMode="isDarkMode"
+      :model-value="showSidebar"
+      @update:model-value="showSidebar = $event"
+      :dark-mode="isDarkMode"
+      @update:dark-mode="isDarkMode = $event"
       @navigate-to-about="goToAbout"
     />
  </div>

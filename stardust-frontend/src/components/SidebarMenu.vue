@@ -23,7 +23,7 @@
         
         <van-cell-group inset title="关于">
           <van-cell title="版本" value="1.0.0" />
-          <van-cell title="关于我们" is-link @click="navigateToAbout" />
+          <van-cell title="关于星屑" is-link @click="navigateToAbout" />
         </van-cell-group>
       </div>
     </van-popup>
@@ -32,21 +32,28 @@
 
 <script setup>
 import { ref, computed, inject } from 'vue';
+import { useRouter } from 'vue-router';
 
 // 组件属性
 const props = defineProps({
-  modelValue: Boolean
+  modelValue: Boolean,
+  darkMode: Boolean
 });
 
 // 组件事件
 const emit = defineEmits([
-  'update:modelValue', 
-  'navigate-to-about'
+  'update:modelValue',
+  'update:darkMode'
 ]);
 
+// 获取路由器实例
+const router = useRouter();
+
 // 注入主题状态
-const isDarkMode = inject('darkMode');
-const toggleDarkMode = inject('toggleDarkMode');
+const isDarkMode = computed({
+  get: () => props.darkMode,
+  set: (value) => emit('update:darkMode', value)
+});
 
 // 计算属性：控制侧边栏显示
 const show = computed({
@@ -59,9 +66,9 @@ const closeSidebar = () => {
   emit('update:modelValue', false);
 };
 
-// 导航到关于页面
+// 导航到关于页面（现在是独立路由）
 const navigateToAbout = () => {
-  emit('navigate-to-about');
+  router.push('/about');
   closeSidebar();
 };
 </script>

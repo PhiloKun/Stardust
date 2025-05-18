@@ -42,7 +42,9 @@ const toggleDarkMode = (value) => {
 provide('toggleDarkMode', toggleDarkMode);
 
 const showTabbar = computed(() => {
-  return route.path === '/publish' || route.path === '/search';
+  return route.path === '/publish' || 
+         route.path === '/search' || 
+         route.path === '/about';
 });
 </script>
 <style>
