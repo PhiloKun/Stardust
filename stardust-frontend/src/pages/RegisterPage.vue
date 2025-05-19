@@ -1,9 +1,16 @@
 <template>
-  <div id="register-page">
+  <div id="register-page" :class="{ 'dark-mode': isDarkMode }">
     <van-nav-bar
       title="注册"
-      left-arrow
-      @click-left="onClickLeft"
+    >
+      <template #left>
+        <van-icon name="wap-nav" size="25" @click="showSidebar = true" />
+      </template>
+    </van-nav-bar>
+    <SidebarMenu
+      v-model="showSidebar"
+      :dark-mode="isDarkMode"
+      @update:dark-mode="val => isDarkMode = val"
     />
     
     <div class="register-container">
@@ -52,11 +59,12 @@
           />
         </van-cell-group>
 
-        <van-cell-group inset class="terms">
+        <div class="terms">
           <van-checkbox v-model="agreeTerms" shape="square" icon-size="16px">
-            我已阅读并同意<a href="#" @click.prevent="showTerms">《用户协议》</a>
+            我已阅读并同意
+            <a href="#" class="user-protocol-link" @click.prevent="showTerms">《用户协议》</a>
           </van-checkbox>
-        </van-cell-group>
+        </div>
 
         <div class="form-actions">
           <van-button 
@@ -73,16 +81,19 @@
       </van-form>
 
       <div class="other-actions">
-        <van-button type="text" @click="toLogin">已有账号？立即登录</van-button>
+        <span class="link-text" @click="toLogin">
+          已有账号？<span class="highlight-link">立即登录</span>
+        </span>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import { showToast, showDialog } from 'vant';
+import SidebarMenu from '@/components/SidebarMenu.vue';
 
 const router = useRouter();
 const username = ref('');
@@ -90,6 +101,8 @@ const email = ref('');
 const password = ref('');
 const confirmPassword = ref('');
 const agreeTerms = ref(false);
+const isDarkMode = inject('darkMode', ref(false));
+const showSidebar = ref(false);
 
 const onClickLeft = () => {
   router.back();
@@ -127,11 +140,20 @@ const toLogin = () => {
 </script>
 
 <style scoped>
+#register-page {
+  min-height: 100vh;
+  background: var(--background-color, #f7f8fa);
+}
+.dark-mode {
+  background: #18181c !important;
+  color: #fff;
+}
 .register-container {
   padding: 30px 20px;
   display: flex;
   flex-direction: column;
   height: calc(100vh - 46px);
+  background: transparent;
 }
 
 .logo {
@@ -154,6 +176,21 @@ const toLogin = () => {
 
 .terms {
   margin-top: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.user-protocol-link {
+  color: var(--primary-color, #1989fa);
+  text-decoration: underline;
+  margin-left: 2px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.user-protocol-link:hover {
+  color: #1765c1;
 }
 
 .form-actions {
@@ -163,5 +200,99 @@ const toLogin = () => {
 .other-actions {
   text-align: center;
   margin-top: 20px;
+}
+
+.link-text {
+  color: var(--primary-color, #1989fa);
+  font-size: 16px;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 500;
+}
+
+.link-text .highlight-link {
+  text-decoration: underline;
+  font-weight: bold;
+  margin-left: 2px;
+}
+
+.link-text:hover,
+.link-text:active {
+  color: #1765c1;
+}
+
+/* 现代风格输入框，仅底部细线 */
+.van-cell,
+.van-cell-group {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+.van-field__control {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1.5px solid #e5e6eb;
+  border-radius: 0;
+  padding: 10px 0 8px 0;
+  margin-bottom: 0;
+  transition: border-color 0.2s;
+  font-size: 16px;
+}
+.van-field__control:focus {
+  border-bottom: 1.5px solid var(--primary-color, #1989fa);
+  outline: none;
+}
+.van-field__label {
+  color: #333 !important;
+  font-weight: 500;
+  font-size: 15px;
+}
+.van-field__control::placeholder {
+  color: #bbb !important;
+  font-size: 15px;
+}
+.dark-mode .van-field__control {
+  border-bottom: 1.5px solid #333;
+  color: #fff;
+}
+.dark-mode .van-field__control:focus {
+  border-bottom: 1.5px solid #1989fa;
+}
+.dark-mode .van-field__label {
+  color: #bbb !important;
+}
+
+/* 深色模式下输入框、表单等适配 */
+.dark-mode .van-cell,
+.dark-mode .van-cell-group,
+.dark-mode .van-field__control {
+  background: #232326 !important;
+  color: #fff !important;
+}
+
+.dark-mode .van-button--primary {
+  background: #1989fa;
+  border: none;
+}
+
+/* 浅色模式下输入框美化 */
+.van-cell,
+.van-cell-group,
+.van-field__control {
+  background: #fff !important;
+  border-radius: 8px;
+  border: 1px solid #e5e6eb;
+  margin-bottom: 12px;
+  transition: border-color 0.2s;
+}
+.van-field__control:focus {
+  border-color: var(--primary-color, #1989fa);
+  outline: none;
+}
+.van-field__label {
+  color: #333 !important;
+}
+.van-field__control::placeholder {
+  color: #bbb !important;
 }
 </style> 

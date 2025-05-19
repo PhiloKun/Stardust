@@ -3,7 +3,7 @@ server:
 spring:
   application:
     name: stardust-backend
-# springdoc-openapi????
+# springdoc-openapi配置
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
@@ -15,7 +15,7 @@ springdoc:
     - group: 'default'
       paths-to-match: '/**'
       packages-to-scan: com.philokun.stardustbackend.controller
-# knife4j???????????????
+# knife4j配置
 knife4j:
   enable: true
   setting:

@@ -10,7 +10,7 @@ const routes = [
         ]
     },
     { path: '/about', component: () => import('@/pages/AboutPage.vue') },
-    { path: '/publish', component: () => import('@/pages/PublishPage.vue') },
+    { path: '/publish', component: () => import('@/pages/PublishPage.vue'), meta: { requiresAuth: true } },
     { path: '/user', component: () => import('@/pages/UserPage.vue') },
     { path: '/login', component: () => import('@/pages/LoginPage.vue') },
     { path: '/register', component: () => import('@/pages/RegisterPage.vue') },

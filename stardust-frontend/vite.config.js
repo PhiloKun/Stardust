@@ -7,6 +7,9 @@ import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    port: 9999
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src')

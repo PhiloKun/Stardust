@@ -31,7 +31,7 @@
 </template>
 
 <script setup>
-import { ref, computed, inject } from 'vue';
+import { ref, computed, inject, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 // 组件属性
@@ -53,6 +53,16 @@ const router = useRouter();
 const isDarkMode = computed({
   get: () => props.darkMode,
   set: (value) => emit('update:darkMode', value)
+});
+
+// 注入全局主题切换方法
+const toggleDarkMode = inject('toggleDarkMode', null);
+
+// 监听 isDarkMode 变化，调用全局切换
+watch(isDarkMode, (val) => {
+  if (typeof toggleDarkMode === 'function') {
+    toggleDarkMode(val);
+  }
 });
 
 // 计算属性：控制侧边栏显示

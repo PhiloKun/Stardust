@@ -3,6 +3,7 @@
     <van-nav-bar
       title="关于星屑"
       left-arrow
+      fixed
       @click-left="onClickLeft"
     />
     
@@ -73,13 +74,13 @@ const onClickLeft = () => {
   color: var(--text-color, #333);
 }
 
+.content {
+  padding: 70px 16px 16px 16px; /* 顶部padding适配导航栏高度 */
+}
+
 .dark-mode {
   background-color: var(--background-color, #121212);
   color: var(--text-color, #fff);
-}
-
-.content {
-  padding: 16px;
 }
 
 .app-info {

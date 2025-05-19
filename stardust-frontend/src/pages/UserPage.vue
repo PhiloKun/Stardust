@@ -2,9 +2,16 @@
   <div id="user-page" :class="{ 'dark-mode': isDarkMode }">
     <van-nav-bar
       title="我的"
-      :right-text="isLoggedIn ? '设置' : ''"
-      @click-right="onClickRight"
-    />
+      left-arrow={false}
+      fixed
+    >
+      <template #left>
+        <van-icon name="wap-nav" size="25" @click="showSidebar = true" />
+      </template>
+      <template #right>
+        <van-icon v-if="isLoggedIn" name="setting-o" size="24" @click="showSettingSidebar = true" />
+      </template>
+    </van-nav-bar>
 
     <div v-if="isLoggedIn" class="user-content">
       <!-- 用户基本信息 -->
@@ -20,43 +27,12 @@
         </div>
         <div class="user-info">
           <h2>{{ userInfo.username }}</h2>
-          <p class="user-id">抖音号: {{ userInfo.id }}</p>
-          <van-tag round type="primary" style="margin-top: 8px;">普通用户</van-tag>
+          <p class="user-id">星屑号: {{ userInfo.id }}</p>
+          <div class="user-bio-row">
+            <span class="user-bio">{{ userInfo.signature || '这个人很低调，什么都没写~' }}</span>
+            <van-icon name="edit" class="edit-icon" @click="showEditSignature" />
+          </div>
         </div>
-      </div>
-
-      <!-- 用户签名 -->
-      <div class="user-signature">
-        <div class="signature-content">
-          <span class="signature-text">{{ userInfo.signature || '这个人很懒，什么都没写~' }}</span>
-          <van-icon name="edit" class="edit-icon" @click="showEditSignature" />
-        </div>
-      </div>
-
-      <!-- 用户数据统计 -->
-      <div class="user-data-stats">
-        <div class="stat-item">
-          <span class="stat-num">{{ userInfo.posts }}</span>
-          <span class="stat-label">作品</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-num">{{ userInfo.following }}</span>
-          <span class="stat-label">关注</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-num">{{ userInfo.followers }}</span>
-          <span class="stat-label">粉丝</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-num">{{ userInfo.likes || 0 }}</span>
-          <span class="stat-label">获赞</span>
-        </div>
-      </div>
-
-      <!-- 编辑资料按钮 -->
-      <div class="profile-actions">
-        <van-button icon="edit" type="primary" size="small" round plain>编辑资料</van-button>
-        <van-button icon="share-o" type="default" size="small" round plain>分享主页</van-button>
       </div>
 
       <!-- 视频内容标签页 -->
@@ -73,6 +49,7 @@
               </div>
               <div class="video-title">{{ video.title }}</div>
             </div>
+            <div class="no-more-tip">暂时没有更多了</div>
           </div>
           <div v-else class="empty-content">
             <van-empty image="search" description="还没有发布作品">
@@ -97,35 +74,6 @@
       </van-tabs>
     </div>
     
-    <!-- 设置菜单 -->
-    <div v-if="isLoggedIn" class="settings-section">
-      <van-cell-group inset>
-        <van-cell title="主题设置" @click="toggleTheme" is-link center>
-          <template #right-icon>
-            <van-switch v-model="isDarkMode" size="24" />
-          </template>
-        </van-cell>
-        <van-cell title="清除缓存" is-link center @click="showToast('已清除缓存')" />
-        <van-cell title="帮助与反馈" is-link center @click="showToast('功能开发中')" />
-        <van-cell title="关于我们" is-link center @click="showToast('星屑 v1.0.0')" />
-      </van-cell-group>
-      
-      <!-- 退出登录按钮 -->
-      <div class="logout-button-container">
-        <van-button 
-          round 
-          block 
-          plain
-          type="danger" 
-          class="logout-button" 
-          @click="showLogoutPopup = true"
-          size="large"
-        >
-          退出登录
-        </van-button>
-      </div>
-    </div>
-    
     <!-- 未登录状态 -->
     <div v-else class="not-logged-in">
       <van-empty
@@ -137,50 +85,43 @@
         </van-button>
       </van-empty>
     </div>
-    
-    <!-- 退出登录弹窗 -->
-    <van-popup
-      v-model="showLogoutPopup"
-      round
-      position="bottom"
-      :style="{ height: '30%' }"
-    >
-      <div class="logout-popup">
-        <div class="logout-popup-title">
-          <van-icon name="warning-o" size="24" class="warning-icon" />
-          <h3>确认退出登录？</h3>
-        </div>
-        <p class="logout-popup-desc">退出后将无法接收消息提醒，是否确认退出？</p>
-        <div class="logout-popup-buttons">
-          <van-button round block @click="showLogoutPopup = false">取消</van-button>
-          <van-button round block type="danger" @click="confirmLogout">确认退出</van-button>
-        </div>
-      </div>
-    </van-popup>
-
-    <!-- 修改签名弹窗 -->
+    <SidebarMenu
+      :model-value="showSidebar"
+      @update:model-value="showSidebar = $event"
+      :dark-mode="isDarkMode"
+      @update:dark-mode="isDarkMode = $event"
+    />
+    <!-- 编辑简介弹窗 -->
     <van-dialog
       v-model="showSignatureDialog"
-      title="修改个性签名"
+      title="编辑个人简介"
       show-cancel-button
       @confirm="updateSignature"
     >
       <van-field
         v-model="tempSignature"
         type="textarea"
-        placeholder="请输入您的个性签名"
+        placeholder="请输入您的个人简介"
         rows="3"
         maxlength="50"
         show-word-limit
       />
     </van-dialog>
+    <!-- 设置侧边栏 -->
+    <UserSettingSidebar
+      v-model="showSettingSidebar"
+      :dark-mode="isDarkMode"
+      @logout="confirmLogout"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, inject, computed, watch } from 'vue';
+import { ref, onMounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
-import { showDialog, showToast } from 'vant';
+import SidebarMenu from "@/components/SidebarMenu.vue";
+import UserSettingSidebar from "@/components/UserSettingSidebar.vue";
+import { showToast, showSuccessToast } from 'vant';
 
 const router = useRouter();
 const userInfo = ref({
@@ -201,15 +142,15 @@ const isDarkMode = ref(globalDarkMode.value);
 // 登录状态
 const isLoggedIn = ref(false);
 
-// 退出登录弹窗状态
-const showLogoutPopup = ref(false);
+// 当前活动的标签页
+const activeTab = ref('works');
 
-// 签名编辑相关
+// 编辑简介弹窗
 const showSignatureDialog = ref(false);
 const tempSignature = ref('');
 
-// 当前活动的标签页
-const activeTab = ref('works');
+// 设置侧边栏
+const showSettingSidebar = ref(false);
 
 // 模拟用户视频数据
 const userVideos = ref([
@@ -248,21 +189,12 @@ onMounted(() => {
   checkLoginStatus();
 });
 
-// 监听主题变化
-watch(isDarkMode, (newVal) => {
-  // 更新全局主题
-  if (typeof toggleDarkMode === 'function') {
-    toggleDarkMode(newVal);
-  }
-});
-
 // 检查登录状态
 const checkLoginStatus = () => {
   try {
     const savedUserInfo = localStorage.getItem('userInfo');
     if (savedUserInfo) {
       userInfo.value = JSON.parse(savedUserInfo);
-      // 补充可能缺少的字段
       userInfo.value.likes = userInfo.value.likes || 233;
       isLoggedIn.value = true;
     } else {
@@ -275,74 +207,15 @@ const checkLoginStatus = () => {
   }
 };
 
-// 设置按钮点击事件
-const onClickRight = () => {
-  if (isLoggedIn.value) {
-    // 导航到设置页面
-    showToast('设置功能开发中');
-  }
-};
-
-// 切换主题
-const toggleTheme = () => {
-  isDarkMode.value = !isDarkMode.value;
-};
-
-// 确认登出
-const confirmLogout = () => {
-  try {
-    // 清除本地存储
-    localStorage.removeItem('userInfo');
-    
-    // 重置状态
-    isLoggedIn.value = false;
-    userInfo.value = {
-      id: '',
-      username: '',
-      avatar: '',
-      followers: 0,
-      following: 0,
-      posts: 0,
-      likes: 0,
-      signature: ''
-    };
-    
-    // 关闭弹窗
-    showLogoutPopup.value = false;
-    
-    // 显示成功提示
-    showToast({
-      type: 'success',
-      message: '已退出登录'
-    });
-    
-    // 退出后重定向到首页
-    setTimeout(() => {
-      router.push('/home');
-    }, 500);
-  } catch (error) {
-    console.error('退出登录失败:', error);
-    showToast('退出失败，请重试');
-  }
-};
-
-// 显示签名编辑对话框
+// 编辑个人简介
 const showEditSignature = () => {
   tempSignature.value = userInfo.value.signature || '';
   showSignatureDialog.value = true;
 };
-
-// 更新签名
 const updateSignature = () => {
   userInfo.value.signature = tempSignature.value;
-  
-  // 更新本地存储
   localStorage.setItem('userInfo', JSON.stringify(userInfo.value));
-  
-  showToast({
-    type: 'success',
-    message: '签名更新成功'
-  });
+  showToast({ type: 'success', message: '个人简介已更新' });
 };
 
 // 前往登录页
@@ -354,6 +227,23 @@ const toLogin = () => {
 const toPublish = () => {
   router.push('/publish');
 };
+
+const showSidebar = ref(false);
+
+// 设置侧边栏
+const confirmLogout = () => {
+  localStorage.removeItem('userInfo');
+  isLoggedIn.value = false;
+  showSettingSidebar.value = false;
+  showSuccessToast({
+    message: '已安全退出账号',
+    duration: 1500,
+    className: 'custom-success-toast',
+    onClose: () => {
+      router.push('/home');
+    }
+  });
+};
 </script>
 
 <style scoped>
@@ -363,27 +253,27 @@ const toPublish = () => {
   background-color: #f7f8fa;
 }
 
-.dark-mode {
-  background-color: var(--background-color, #121212);
-  color: var(--text-color, #fff);
+.user-content {
+  padding: 70px 16px 0 16px;
 }
 
-.user-content {
-  padding: 16px 16px 0;
+.dark-mode {
+  background-color: #000 !important;
+  color: var(--text-color, #fff);
 }
 
 .user-header {
   display: flex;
   padding: 20px;
-  background-color: #fff;
+  background-color: var(--card-background, #fff);
   border-radius: 12px;
   margin-bottom: 16px;
-  box-shadow: 0 2px 12px rgba(100, 101, 102, 0.08);
+  box-shadow: 0 2px 12px var(--shadow-color, rgba(100, 101, 102, 0.08));
 }
 
 .dark-mode .user-header {
-  background-color: #1c1c1e;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+  background-color: var(--card-background, #1c1c1e);
+  box-shadow: 0 2px 12px var(--shadow-color, rgba(0,0,0,0.18));
 }
 
 .user-info {
@@ -395,94 +285,45 @@ const toPublish = () => {
   margin: 0 0 4px 0;
   font-size: 20px;
   font-weight: 600;
+  color: var(--text-color, #222);
+}
+
+.dark-mode .user-info h2 {
+  color: var(--text-color, #fff);
 }
 
 .user-id {
-  color: #969799;
+  color: var(--text-color-secondary, #969799);
   margin: 4px 0;
   font-size: 14px;
 }
 
 .dark-mode .user-id {
-  color: #7b7b7d;
+  color: var(--text-color-secondary, #aaa);
 }
 
-/* 用户签名样式 */
-.user-signature {
-  margin: 10px 0 16px;
-}
-
-.signature-content {
+.user-bio-row {
   display: flex;
   align-items: center;
-  padding: 0 5px;
+  gap: 8px;
+  margin-top: 8px;
 }
-
-.signature-text {
-  flex: 1;
+.user-bio {
   font-size: 14px;
-  color: #666;
-  line-height: 1.4;
+  color: var(--text-color-secondary, #888);
+  flex: 1;
+  word-break: break-all;
 }
-
-.dark-mode .signature-text {
-  color: #bbb;
-}
-
 .edit-icon {
   color: #999;
   font-size: 16px;
-  margin-left: 8px;
-}
-
-/* 数据统计 - 抖音风格 */
-.user-data-stats {
-  display: flex;
-  margin-bottom: 16px;
-}
-
-.user-data-stats .stat-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   cursor: pointer;
-}
-
-.stat-num {
-  font-size: 18px;
-  font-weight: bold;
-  color: #323233;
-}
-
-.dark-mode .stat-num {
-  color: #f5f5f7;
-}
-
-.stat-label {
-  font-size: 13px;
-  color: #969799;
-  margin-top: 4px;
-}
-
-.dark-mode .stat-label {
-  color: #7b7b7d;
-}
-
-/* 资料编辑按钮 */
-.profile-actions {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.profile-actions .van-button {
-  flex: 1;
 }
 
 /* 视频标签页 */
 .video-tabs {
   margin-bottom: 20px;
+  background: transparent;
 }
 
 /* 视频网格 */
@@ -497,6 +338,12 @@ const toPublish = () => {
   position: relative;
   aspect-ratio: 9/16;
   overflow: hidden;
+  background: var(--card-background, #fff);
+  border-radius: 8px;
+}
+
+.dark-mode .video-item {
+  background: var(--card-background, #1c1c1e);
 }
 
 .video-cover {
@@ -509,13 +356,14 @@ const toPublish = () => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 8px 8px 0 0;
 }
 
 .play-count {
   position: absolute;
   bottom: 6px;
   left: 6px;
-  color: white;
+  color: #fff;
   font-size: 12px;
   display: flex;
   align-items: center;
@@ -531,8 +379,12 @@ const toPublish = () => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #666;
+  color: var(--text-color-secondary, #666);
   padding: 4px 0;
+}
+
+.dark-mode .video-title {
+  color: var(--text-color-secondary, #bbb);
 }
 
 /* 空内容显示 */
@@ -540,65 +392,32 @@ const toPublish = () => {
   padding: 60px 0;
 }
 
-/* 设置区域 */
-.settings-section {
-  margin-top: 40px;
-  padding: 0 16px 30px;
-}
-
-/* 退出登录按钮容器 */
-.logout-button-container {
-  margin: 30px 0 20px;
-}
-
-.logout-button {
-  height: 44px;
-  font-size: 16px;
-  font-weight: 500;
-  border-color: #ee0a24;
-  color: #ee0a24;
-}
-
-/* 退出弹窗样式 */
-.logout-popup {
-  padding: 24px 16px;
-  text-align: center;
-}
-
-.logout-popup-title {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.warning-icon {
-  margin-right: 8px;
-  color: #ff976a;
-}
-
-.logout-popup-title h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.logout-popup-desc {
-  margin-bottom: 24px;
-  color: #969799;
-  font-size: 14px;
-}
-
-.logout-popup-buttons {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
 .not-logged-in {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 80vh;
+}
+
+.no-more-tip {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--text-color-secondary, #aaa);
+  font-size: 14px;
+  margin: 24px 0 8px 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.custom-success-toast {
+  background: linear-gradient(90deg, #1989fa 60%, #4fc3f7 100%) !important;
+  color: #fff !important;
+  border-radius: 12px !important;
+  font-size: 17px !important;
+  font-weight: bold;
+  box-shadow: 0 4px 24px rgba(25,137,250,0.18);
+  padding: 18px 28px !important;
 }
 </style>
