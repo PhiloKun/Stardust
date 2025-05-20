@@ -5,10 +5,9 @@
         <div class="video-container">
           <!-- 视频播放器 -->
           <video class="video-player" :src="video.videoUrl" :poster="video.coverUrl" x5-video-player-type="h5"
-            x5-playsinline="true" webkit-playsinline="true" playsinline="true" :ref="(el) => {
+            x5-playsinline="true" webkit-playsinline="true" playsinline="true" muted :ref="(el) => {
                 videoRefs[index] = el;
-              }
-              " loop @click="togglePlay(index)" @timeupdate="updateProgress(index)"
+              }" loop @click="togglePlay(index)" @timeupdate="updateProgress(index)"
             @loadedmetadata="videoLoaded(index)"></video>
 
           <!-- 播放状态图标 -->
@@ -672,7 +671,7 @@ const showGuide = ref(true);
 
 .tag {
   font-size: 12px;
-  color: var(--secondary-color, #fe2c55);
+  color: #1989fa;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
 

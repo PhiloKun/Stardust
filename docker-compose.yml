@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  frontend:
+    build:
+      context: ./stardust-frontend
+    volumes:
+      - ./stardust-frontend:/app
+    ports:
+      - "7000:7000"
+    restart: always
+
+  backend:
+    build:
+      context: ./stardust-backend
+    volumes:
+      - ./stardust-backend:/app
+    ports:
+      - "7070:7070"
+    restart: always 
