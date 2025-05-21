@@ -5,10 +5,15 @@
         <div class="video-container">
           <!-- 视频播放器 -->
           <video class="video-player" :src="video.videoUrl" :poster="video.coverUrl" x5-video-player-type="h5"
-            x5-playsinline="true" webkit-playsinline="true" playsinline="true" muted :ref="(el) => {
+            x5-playsinline="true" webkit-playsinline="true" playsinline="true" :ref="(el) => {
                 videoRefs[index] = el;
               }" loop @click="togglePlay(index)" @timeupdate="updateProgress(index)"
-            @loadedmetadata="videoLoaded(index)"></video>
+            @loadedmetadata="videoLoaded(index)" @waiting="onVideoWaiting(index)" @canplay="onVideoCanPlay(index)"></video>
+
+          <!-- 视频加载中状态图标 -->
+          <div class="loading-status" v-if="isVideoLoading[index]">
+            <van-icon name="loading" size="48" color="#1989fa" />
+          </div>
 
           <!-- 播放状态图标 -->
           <div class="play-status" v-if="isVideoPlaying[index] === false">
@@ -56,11 +61,16 @@
     </van-swipe>
 
     <!-- 全局进度条，固定在底部 -->
-    <div class="video-progress-container" v-show="showControls" @click.stop="seekVideo($event, currentVideoIndex)"
-      @touchstart.stop="startDrag($event)" @touchmove.stop="onDrag($event)" @touchend.stop="endDrag()">
+    <div class="video-progress-container" v-show="showControls"
+      @click.stop="seekVideo($event, currentVideoIndex)"
+      @touchstart.stop="startDrag($event)"
+      @touchmove.stop="onDrag($event)"
+      @touchend.stop="endDrag()"
+      @mousedown.stop="startDragMouse($event)"
+    >
       <div class="video-progress">
         <div class="progress-background"></div>
-        <div class="progress-current" :style="{ width: getProgressWidth(currentVideoIndex) }">
+        <div class="progress-current" :class="{ dragging: isDragging }" :style="{ width: getProgressWidth(currentVideoIndex) }">
           <div class="progress-dot"></div>
         </div>
       </div>
@@ -193,18 +203,7 @@ const videoList = ref([
     likes: "20.1w",
     comments: "5.8w",
     avatar: "https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg",
-  },
-  {
-    videoUrl:
-      "https://assets.mixkit.co/videos/preview/mixkit-countryside-meadow-4075-large.mp4",
-    coverUrl: "https://pic.616pic.com/bg_w1180/00/13/42/Z7cf0897US.jpg",
-    username: "乡村时光",
-    description: "远离城市喧嚣，感受乡村宁静时光",
-    tags: ["乡村", "自然", "慢生活"],
-    likes: "11.7w",
-    comments: "2.9w",
-    avatar: "https://fastly.jsdelivr.net/npm/@vant/assets/desert.jpeg",
-  },
+  }
 ]);
 
 // 检测设备类型
@@ -300,13 +299,11 @@ const getProgressWidth = (index) => {
 // 开始拖动进度条
 const startDrag = (event) => {
   isDragging.value = true;
+  console.log('touch start, isDragging:', isDragging.value);
   dragStartX.value = event.touches[0].clientX;
-
   const container = event.currentTarget;
   const rect = container.getBoundingClientRect();
   dragStartPosition.value = (dragStartX.value - rect.left) / rect.width;
-
-  // 暂停视频
   const video = videoRefs[currentVideoIndex.value];
   if (video && !video.paused) {
     video.pause();
@@ -316,12 +313,11 @@ const startDrag = (event) => {
 // 拖动进度条中
 const onDrag = (event) => {
   if (!isDragging.value) return;
-
+  console.log('touch move, isDragging:', isDragging.value);
   const container = event.currentTarget;
   const rect = container.getBoundingClientRect();
   const x = event.touches[0].clientX;
   const position = Math.max(0, Math.min(1, (x - rect.left) / rect.width));
-
   const video = videoRefs[currentVideoIndex.value];
   if (video && videoDurations[currentVideoIndex.value]) {
     video.currentTime = position * videoDurations[currentVideoIndex.value];
@@ -332,8 +328,7 @@ const onDrag = (event) => {
 // 结束拖动进度条
 const endDrag = () => {
   isDragging.value = false;
-
-  // 恢复视频播放状态
+  console.log('touch end, isDragging:', isDragging.value);
   const video = videoRefs[currentVideoIndex.value];
   if (video && isVideoPlaying[currentVideoIndex.value]) {
     video.play();
@@ -518,6 +513,48 @@ const togglePlay = (index) => {
 };
 
 const showGuide = ref(true);
+
+// 在<script setup>中添加：
+const isVideoLoading = reactive({});
+
+const onVideoWaiting = (index) => {
+  isVideoLoading[index] = true;
+};
+const onVideoCanPlay = (index) => {
+  isVideoLoading[index] = false;
+};
+// 在playVideo、pauseAllVideos等切换视频时，建议也初始化isVideoLoading[index] = true;
+
+// PC端鼠标拖动进度条
+const startDragMouse = (event) => {
+  isDragging.value = true;
+  console.log('mouse down, isDragging:', isDragging.value);
+  document.addEventListener('mousemove', onDragMouse);
+  document.addEventListener('mouseup', endDragMouse);
+};
+const onDragMouse = (event) => {
+  if (!isDragging.value) return;
+  console.log('mouse move, isDragging:', isDragging.value);
+  const container = document.querySelector('.video-progress-container');
+  const rect = container.getBoundingClientRect();
+  const x = event.clientX;
+  const position = Math.max(0, Math.min(1, (x - rect.left) / rect.width));
+  const video = videoRefs[currentVideoIndex.value];
+  if (video && videoDurations[currentVideoIndex.value]) {
+    video.currentTime = position * videoDurations[currentVideoIndex.value];
+    currentTimes[currentVideoIndex.value] = video.currentTime;
+  }
+};
+const endDragMouse = () => {
+  isDragging.value = false;
+  console.log('mouse up, isDragging:', isDragging.value);
+  document.removeEventListener('mousemove', onDragMouse);
+  document.removeEventListener('mouseup', endDragMouse);
+  const video = videoRefs[currentVideoIndex.value];
+  if (video && isVideoPlaying[currentVideoIndex.value]) {
+    video.play();
+  }
+};
 </script>
 
 <style scoped>
@@ -581,8 +618,7 @@ const showGuide = ref(true);
 
 .video-progress {
   width: 100%;
-  height: 2px;
-  /* 更细的进度条 */
+  height: 6px; /* 加粗更明显 */
   position: relative;
   cursor: pointer;
 }
@@ -592,16 +628,18 @@ const showGuide = ref(true);
   width: 100%;
   height: 100%;
   background-color: rgba(255, 255, 255, 0.3);
-  border-radius: 1px;
+  border-radius: 3px;
 }
 
 .progress-current {
   position: absolute;
   height: 100%;
-  background-color: #fe2c55;
-  /* 抖音红色 */
-  border-radius: 1px;
-  transition: width 0.1s;
+  background-color: #fe2c55; /* 红色 */
+  border-radius: 3px;
+  transition: width 0.1s, background-color 0.2s;
+}
+.progress-current.dragging {
+  background-color: #1989fa !important;
 }
 
 .progress-dot {
@@ -609,10 +647,10 @@ const showGuide = ref(true);
   right: -5px;
   top: 50%;
   transform: translateY(-50%);
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background-color: #fe2c55;
+  background-color: #1989fa;
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
   opacity: 0;
   transition: opacity 0.2s ease;
