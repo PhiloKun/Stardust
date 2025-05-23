@@ -3,6 +3,14 @@ server:
 spring:
   application:
     name: stardust-backend
+  datasource:
+    url: jdbc:mysql://localhost:3306/stardust?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
 # springdoc-openapi配置
 springdoc:
   swagger-ui:
@@ -20,3 +28,21 @@ knife4j:
   enable: true
   setting:
     language: zh_cn
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      id-type: assign-id
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+jwt:
+  secret: bHjYh5oP6nQ9uKxR3s2v8w1zA7cB4eF0mG7jK5tYpFwE4iDcLqUrXaSdFbGcHeI 
+  expiration: 86400000
+
+logging:
+  level:
+    com.philokun.stardustbackend: info
+    org.springframework: info

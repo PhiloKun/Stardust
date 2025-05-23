@@ -10,17 +10,17 @@
   >
     <div class="setting-sidebar" :class="{ 'dark-mode': darkMode }">
       <!-- 顶部用户信息 -->
-      <div v-if="userInfo" class="sidebar-user">
+      <div v-if="userStore.userInfo" class="sidebar-user">
         <van-image
           round
           width="64"
           height="64"
-          :src="userInfo.avatar"
-          :error-content="userInfo.username ? userInfo.username.charAt(0).toUpperCase() : '?'"
+          :src="userStore.userInfo.avatar"
+          :error-content="userStore.userInfo.username ? userStore.userInfo.username.charAt(0).toUpperCase() : '?'"
         />
         <div class="user-meta">
-          <div class="user-name">{{ userInfo.username }}</div>
-          <div class="user-id">星屑号: {{ userInfo.id }}</div>
+          <div class="user-name">{{ userStore.userInfo.username }}</div>
+          <div class="user-id">星屑号: {{ userStore.userInfo.id }}</div>
         </div>
       </div>
       <div class="sidebar-header">
@@ -41,10 +41,13 @@
 </template>
 
 <script setup>
+import { useUserStore } from '@/stores/userStore';
+
+const userStore = useUserStore();
+
 const props = defineProps({
   modelValue: Boolean,
-  darkMode: Boolean,
-  userInfo: Object
+  darkMode: Boolean
 });
 const emit = defineEmits(['update:modelValue', 'logout']);
 

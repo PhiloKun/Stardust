@@ -8,7 +8,14 @@ import path from 'path'
 // https://vite.dev/config/
 export default defineConfig({
   server: {
-    port: 7000
+    port: 7000,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:7070', // 后端服务地址
+        changeOrigin: true,
+        rewrite: path => path.replace(/^\/api/, '')
+      }
+    }
   },
   resolve: {
     alias: {
