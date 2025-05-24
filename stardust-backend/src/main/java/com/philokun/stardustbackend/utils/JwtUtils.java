@@ -23,7 +23,7 @@ public class JwtUtils {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(Long userId) {
+    public String generateToken(String userId) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 

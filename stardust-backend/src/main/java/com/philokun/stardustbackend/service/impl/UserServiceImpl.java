@@ -48,6 +48,7 @@ public class UserServiceImpl implements UserService {
         userMapper.insert(user);
         UserRegisterVO userRegisterVO = new UserRegisterVO();
         BeanUtils.copyProperties(user, userRegisterVO);
+        userRegisterVO.setId(user.getId().toString());
         userRegisterVO.setToken(jwtUtils.generateToken(user.getId()));
         // 生成token并返回用户信息
         return userRegisterVO;
@@ -65,6 +66,7 @@ public class UserServiceImpl implements UserService {
         }
         UserLoginVO userLoginVO = new UserLoginVO();
         BeanUtils.copyProperties(user, userLoginVO);
+        userLoginVO.setId(user.getId().toString());
         userLoginVO.setToken(jwtUtils.generateToken(user.getId()));
         return userLoginVO;
     }
