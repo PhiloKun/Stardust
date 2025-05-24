@@ -1,6 +1,6 @@
 <template>
   <div id="login-page" :class="{ 'dark-mode': isDarkMode }">
-    <van-nav-bar title="用户名登录">
+    <van-nav-bar title="登录">
       <template #left>
         <van-icon name="wap-nav" size="25" @click="showSidebar = true" />
       </template>
@@ -31,14 +31,18 @@
           <van-field
             v-model="password"
             name="password"
-            type="password"
+            :type="showPwd ? 'text' : 'password'"
             label="密码"
             placeholder="请输入密码"
             :rules="[
               { required: true, message: '请输入密码' },
               { pattern: /^.{6,20}$/, message: '密码需6-20位' }
             ]"
-          />
+          >
+            <template #right-icon>
+              <van-icon :name="showPwd ? 'eye-o' : 'closed-eye'" @click="showPwd = !showPwd" />
+            </template>
+          </van-field>
         </van-cell-group>
         <div class="form-actions">
           <van-button round block type="primary" native-type="submit" size="large">
@@ -58,7 +62,7 @@
 <script setup>
 import { ref, inject } from 'vue';
 import { useRouter } from 'vue-router';
-import { showToast, showSuccessToast } from 'vant';
+import { showToast } from 'vant';
 import SidebarMenu from '@/components/SidebarMenu.vue';
 import { useUserStore } from '@/stores/userStore';
 
@@ -68,6 +72,7 @@ const username = ref('');
 const password = ref('');
 const isDarkMode = inject('darkMode', ref(false));
 const showSidebar = ref(false);
+const showPwd = ref(false);
 
 const notAllNumber = (val) => {
   return !/^[0-9]+$/.test(val);
@@ -78,26 +83,31 @@ const onSubmit = async (values) => {
     const result = await userStore.login(values.username, values.password);
     
     if (result.success) {
-      showSuccessToast({
-        message: '登录成功，欢迎回来！',
-        duration: 1500,
-        className: 'custom-success-toast',
+      showToast({
+        message: '登录成功,欢迎回来！',
+        type: 'success',
+        duration: 2000,
+        className: 'custom-toast custom-toast-success',
         onClose: () => {
           router.push('/user');
         }
       });
     } else {
       showToast({
+        message: '登录失败,请检查用户名和密码',
         type: 'fail',
-        message: result.message
+        duration: 2000,
+        className: 'custom-toast custom-toast-danger'
       });
     }
   } catch (e) {
-    showToast({
-      type: 'fail',
-      message: '登录过程中发生错误'
-    });
     console.error('登录异常:', e);
+    showToast({
+      message: e.message || '登录过程中发生错误',
+      type: 'fail',
+      duration: 2000,
+      className: 'custom-toast custom-toast-danger'
+    });
   }
 };
 
@@ -224,5 +234,38 @@ const toRegister = () => {
   font-weight: bold;
   box-shadow: 0 4px 24px rgba(25,137,250,0.18);
   padding: 18px 28px !important;
+}
+
+:deep(.van-notify) {
+  font-weight: bold;
+  font-size: 16px;
+  letter-spacing: 1px;
+}
+
+:deep(.van-toast) {
+  font-weight: bold;
+  font-size: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  padding: 10px 18px;
+  text-align: center;
+  max-width: 80%;
+  margin: 0 auto;
+  color: var(--toast-text-color, #333);
+}
+
+:deep(.custom-toast-success) {
+  background: linear-gradient(90deg, #1989fa 60%, #4fc3f7 100%) !important;
+  color: #fff !important;
+}
+
+:deep(.custom-toast-danger) {
+  background: linear-gradient(90deg, #ff4d4f 60%, #ffb6b9 100%) !important;
+  color: #fff !important;
+}
+
+:deep(.custom-toast-warning) {
+    background: linear-gradient(90deg, #ffb300 60%, #ffe066 100%) !important;
+    color: #333 !important;
 }
 </style>

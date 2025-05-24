@@ -5,6 +5,6 @@ import lombok.Data;
 @Data
 public class UserRegisterVO {
     private Long id;        // 用户ID
-    private String username;    // 用户名
+    private String username;    // 用户名   
     private String token;  // JWT token，用于用户认证
 } 

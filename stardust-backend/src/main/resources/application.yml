@@ -34,7 +34,6 @@ mybatis-plus:
     map-underscore-to-camel-case: true
   global-config:
     db-config:
-      id-type: assign-id
       logic-delete-value: 1
       logic-not-delete-value: 0
 
@@ -46,3 +45,10 @@ logging:
   level:
     com.philokun.stardustbackend: info
     org.springframework: info
+
+minio:
+  endpoint: http://localhost:9000
+  accessKey: minioadmin
+  secretKey: philokun
+  bucketName: stardust
+

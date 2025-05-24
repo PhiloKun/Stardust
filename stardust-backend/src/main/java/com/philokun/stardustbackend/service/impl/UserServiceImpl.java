@@ -6,9 +6,12 @@ import com.philokun.stardustbackend.model.dto.user.UserLoginRequest;
 import com.philokun.stardustbackend.model.dto.user.UserRegisterRequest;
 import com.philokun.stardustbackend.model.entity.User;
 import com.philokun.stardustbackend.model.vo.user.UserRegisterVO;
-import com.philokun.stardustbackend.model.vo.user.UserVO;
+import com.philokun.stardustbackend.model.vo.user.UserInfoVO;
+import com.philokun.stardustbackend.model.vo.user.UserLoginVO;
 import com.philokun.stardustbackend.service.UserService;
 import com.philokun.stardustbackend.utils.JwtUtils;
+import com.philokun.stardustbackend.config.MinioConfig;
+import com.philokun.stardustbackend.utils.MinioUtils;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.BeanUtils;
@@ -22,19 +25,18 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
+    private final MinioConfig minioConfig;
+    private final MinioUtils minioUtils;
 
     @Override
     @Transactional
     public UserRegisterVO register(UserRegisterRequest request) {
-        if (!request.getPassword().equals(request.getConfirmPassword())) {
-            throw new IllegalArgumentException("两次输入的密码不一致");
-        }
-        // 验证密码强度
-        validatePassword(request.getPassword());
 
         // 检查用户名是否已存在
-        if (userMapper.selectCount(new LambdaQueryWrapper<User>()
-                .eq(User::getUsername, request.getUsername())) > 0) {
+        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(User::getUsername, request.getUsername());
+        long count = userMapper.selectCount(queryWrapper);
+        if (count > 0) {
             throw new IllegalArgumentException("用户名已存在");
         }
 
@@ -42,6 +44,7 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         user.setUsername(request.getUsername());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setAvatar("default/avatar.png");
         userMapper.insert(user);
         UserRegisterVO userRegisterVO = new UserRegisterVO();
         BeanUtils.copyProperties(user, userRegisterVO);
@@ -51,40 +54,35 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserVO login(UserLoginRequest request) {
-        // 验证密码强度
-        validatePassword(request.getPassword());
-
+    public UserLoginVO login(UserLoginRequest request) {
         // 查找用户
-        User user = userMapper.selectOne(new LambdaQueryWrapper<User>()
-                .eq(User::getUsername, request.getUsername()));
+        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(User::getUsername, request.getUsername());
+        User user = userMapper.selectOne(queryWrapper);
 
         if (user == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new IllegalArgumentException("用户名或密码错误");
         }
-        UserVO userVO = new UserVO();
-        BeanUtils.copyProperties(user, userVO);
-        userVO.setToken(jwtUtils.generateToken(user.getId()));
-        return userVO;
+        UserLoginVO userLoginVO = new UserLoginVO();
+        BeanUtils.copyProperties(user, userLoginVO);
+        userLoginVO.setToken(jwtUtils.generateToken(user.getId()));
+        return userLoginVO;
     }
 
-    public void validatePassword(String password) {
-        // 密码强度验证逻辑
-        if (password == null || password.length() < 6 || password.length() > 20) {
-            throw new IllegalArgumentException("密码长度需在6-20位之间");
-        }
-    }
+
 
     @Override
-    public UserVO getUserInfo(Long userId) {
+    public UserInfoVO getUserInfo(Long userId) {
         User user = userMapper.selectById(userId);
         if (user == null) {
             throw new IllegalArgumentException("用户不存在");
         }
-        UserVO userVO = new UserVO();
-        BeanUtils.copyProperties(user, userVO);
-        userVO.setToken(jwtUtils.generateToken(user.getId()));
-        return userVO;
+        UserInfoVO userInfoVO = new UserInfoVO();
+        BeanUtils.copyProperties(user, userInfoVO);
+        // 从 MinIO 获取完整的头像 URL
+        String avatarUrl = minioUtils.getFileUrl(minioConfig.getBucketName(), user.getAvatar());
+        userInfoVO.setAvatar(avatarUrl);
+        return userInfoVO;
     }
 
 

@@ -1,14 +1,16 @@
 <template>
   <div id="user-page" :class="{ 'dark-mode': isDarkMode }">
-    <van-nav-bar
-      title="我的"
-      fixed
-    >
+    <van-nav-bar title="我的" fixed>
       <template #left>
         <van-icon name="wap-nav" size="25" @click="showSidebar = true" />
       </template>
       <template #right>
-        <van-icon v-if="isLoggedIn" name="setting-o" size="24" @click="showSettingSidebar = true" />
+        <van-icon
+          v-if="isLoggedIn"
+          name="setting-o"
+          size="24"
+          @click="showSettingSidebar = true"
+        />
       </template>
     </van-nav-bar>
 
@@ -28,23 +30,35 @@
           <h2>{{ userInfo.username }}</h2>
           <p class="user-id">星屑号: {{ userInfo.id }}</p>
           <div class="user-bio-row">
-            <span class="user-bio">{{ userInfo.signature || '这个人很低调，什么都没写~' }}</span>
-            <van-icon name="edit" class="edit-icon" @click="showEditSignature" />
+            <span class="user-bio">{{
+              userInfo.profile || "这个人很低调，什么都没写~"
+            }}</span>
+            <van-icon
+              name="edit"
+              class="edit-icon"
+              @click="showEditSignature"
+            />
           </div>
         </div>
       </div>
 
       <!-- 视频内容标签页 -->
-      <van-tabs v-model="activeTab" sticky animated swipeable class="video-tabs">
+      <van-tabs
+        v-model="activeTab"
+        sticky
+        animated
+        swipeable
+        class="video-tabs"
+      >
         <van-tab name="works" title="作品">
           <div class="video-grid" v-if="userVideos.length > 0">
-            <div v-for="(video, index) in userVideos" :key="index" class="video-item">
+            <div
+              v-for="(video, index) in userVideos"
+              :key="index"
+              class="video-item"
+            >
               <div class="video-cover">
-                <img :src="video.cover" alt="视频封面">
-                <span class="play-count">
-                  <van-icon name="play-circle-o" />
-                  {{ formatCount(video.playCount) }}
-                </span>
+                <img :src="video.cover" alt="视频封面" />
               </div>
               <div class="video-title">{{ video.title }}</div>
             </div>
@@ -52,19 +66,25 @@
           </div>
           <div v-else class="empty-content">
             <van-empty image="search" description="还没有发布作品">
-              <van-button round type="primary" size="small" icon="plus" @click="toPublish">
+              <van-button
+                round
+                type="primary"
+                size="small"
+                icon="plus"
+                @click="toPublish"
+              >
                 发布视频
               </van-button>
             </van-empty>
           </div>
         </van-tab>
-        
+
         <van-tab name="favorites" title="收藏">
           <div class="empty-content">
             <van-empty description="还没有收藏内容" />
           </div>
         </van-tab>
-        
+
         <van-tab name="likes" title="喜欢">
           <div class="empty-content">
             <van-empty description="喜欢的视频列表为空" />
@@ -72,7 +92,7 @@
         </van-tab>
       </van-tabs>
     </div>
-    
+
     <!-- 未登录状态 -->
     <div v-else class="not-logged-in">
       <van-empty
@@ -116,41 +136,36 @@
 </template>
 
 <script setup>
-import { ref, onMounted, inject, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted, inject, computed } from "vue";
+import { useRouter } from "vue-router";
 import SidebarMenu from "@/components/SidebarMenu.vue";
 import UserSettingSidebar from "@/components/UserSettingSidebar.vue";
-import { showToast, showSuccessToast } from 'vant';
-import { useUserStore } from '@/stores/userStore';
+import { showToast } from "vant";
+import { useUserStore } from "@/stores/userStore";
 
 const router = useRouter();
 const userStore = useUserStore();
 
-// 从Pinia获取用户信息
 const userInfo = ref({
-  id: '',
-  username: '',
-  avatar: '',
-  followers: 0,
-  following: 0,
-  posts: 0,
-  likes: 0,
-  signature: ''
+  id: "",
+  username: "",
+  avatar: "",
+  profile: "",
 });
 
 // 注入主题状态
-const globalDarkMode = inject('darkMode', ref(false));
+const globalDarkMode = inject("darkMode", ref(false));
 const isDarkMode = ref(globalDarkMode.value);
 
 // 登录状态
 const isLoggedIn = computed(() => userStore.isLoggedIn);
 
 // 当前活动的标签页
-const activeTab = ref('works');
+const activeTab = ref("works");
 
 // 编辑简介弹窗
 const showSignatureDialog = ref(false);
-const tempSignature = ref('');
+const tempSignature = ref("");
 
 // 设置侧边栏
 const showSettingSidebar = ref(false);
@@ -158,40 +173,50 @@ const showSettingSidebar = ref(false);
 // 模拟用户视频数据
 const userVideos = ref([
   {
-    id: '1',
-    title: '如何开始创作视频',
-    cover: 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg',
-    playCount: 1342
+    id: "1",
+    title: "如何开始创作视频",
+    cover: "https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg",
   },
   {
-    id: '2',
-    title: '星屑平台使用教程',
-    cover: 'https://fastly.jsdelivr.net/npm/@vant/assets/apple-1.jpeg',
-    playCount: 2198
+    id: "2",
+    title: "星屑平台使用教程",
+    cover: "https://fastly.jsdelivr.net/npm/@vant/assets/apple-1.jpeg",
   },
   {
-    id: '3',
-    title: '我的第一个作品',
-    cover: 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg',
-    playCount: 987
-  }
+    id: "3",
+    title: "我的第一个作品",
+    cover: "https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg",
+  },
+  {
+    id: "4",
+    title: "视频剪辑技巧分享",
+    cover: "https://fastly.jsdelivr.net/npm/@vant/assets/apple-2.jpeg",
+  },
+  {
+    id: "5",
+    title: "摄影入门指南",
+    cover: "https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg",
+  },
+  {
+    id: "6",
+    title: "后期制作教程",
+    cover: "https://fastly.jsdelivr.net/npm/@vant/assets/apple-3.jpeg",
+  },
 ]);
 
-// 格式化数字
-const formatCount = (count) => {
-  if (count >= 10000) {
-    return (count / 10000).toFixed(1) + 'w';
-  } else if (count >= 1000) {
-    return (count / 1000).toFixed(1) + 'k';
-  }
-  return count;
-};
 
 // 在组件挂载时检查登录状态
-onMounted(() => {
-  updateUserInfo();
-  if (!userStore.isLoggedIn) {
-    router.replace('/login');
+onMounted(async () => {
+  if (userStore.isLoggedIn) {
+    // 如果已登录，先更新本地 userInfo，然后从后端获取最新详情
+    updateUserInfo();
+    if (userStore.userInfo && userStore.userInfo.id) {
+        await userStore.fetchUserInfo(userStore.userInfo.id);
+        // 获取最新详情后再次更新本地 userInfo
+        updateUserInfo();
+    }
+  } else {
+    router.replace("/login");
   }
 });
 
@@ -199,46 +224,60 @@ onMounted(() => {
 const updateUserInfo = () => {
   if (userStore.userInfo) {
     userInfo.value = { ...userStore.userInfo };
-    userInfo.value.likes = userInfo.value.likes || 233;
   }
 };
 
-// 编辑个人简介
+// 显示编辑简介弹窗
 const showEditSignature = () => {
-  tempSignature.value = userInfo.value.signature || '';
-  showSignatureDialog.value = true;
+    tempSignature.value = userInfo.value.profile;
+    showSignatureDialog.value = true;
 };
 
+// 更新简介
 const updateSignature = () => {
-  userInfo.value.signature = tempSignature.value;
-  localStorage.setItem('userInfo', JSON.stringify(userInfo.value));
-  showToast({ type: 'success', message: '个人简介已更新' });
+    // TODO: 调用后端接口更新用户简介
+    console.log("更新简介:", tempSignature.value);
+    // 更新本地 userInfo
+    userInfo.value.profile = tempSignature.value;
+    // 关闭弹窗
+    showSignatureDialog.value = false;
 };
 
 // 前往登录页
 const toLogin = () => {
-  router.push('/login');
+  router.push("/login");
 };
 
 // 前往发布页
 const toPublish = () => {
-  router.push('/publish');
+  router.push("/publish");
 };
 
 const showSidebar = ref(false);
 
 // 登出方法
 const confirmLogout = () => {
-  userStore.logout();
+  const result = userStore.logout();
   showSettingSidebar.value = false;
-  showSuccessToast({
-    message: '已安全退出账号',
-    duration: 1500,
-    className: 'custom-success-toast',
-    onClose: () => {
-      router.push('/home');
-    }
-  });
+
+  if (result.success) {
+    showToast({
+      message: result.message || "已安全退出账号",
+      type: "success",
+      duration: 1500,
+      className: "custom-toast custom-toast-success",
+      onClose: () => {
+        router.push("/home");
+      },
+    });
+  } else {
+    showToast({
+      message: result.message || "退出账号失败",
+      type: "fail",
+      duration: 2000,
+      className: "custom-toast custom-toast-danger",
+    });
+  }
 };
 </script>
 
@@ -269,7 +308,7 @@ const confirmLogout = () => {
 
 .dark-mode .user-header {
   background-color: var(--card-background, #1c1c1e);
-  box-shadow: 0 2px 12px var(--shadow-color, rgba(0,0,0,0.18));
+  box-shadow: 0 2px 12px var(--shadow-color, rgba(0, 0, 0, 0.18));
 }
 
 .user-info {
@@ -304,12 +343,14 @@ const confirmLogout = () => {
   gap: 8px;
   margin-top: 8px;
 }
+
 .user-bio {
   font-size: 14px;
   color: var(--text-color-secondary, #888);
   flex: 1;
   word-break: break-all;
 }
+
 .edit-icon {
   color: #999;
   font-size: 16px;
@@ -413,7 +454,7 @@ const confirmLogout = () => {
   border-radius: 12px !important;
   font-size: 17px !important;
   font-weight: bold;
-  box-shadow: 0 4px 24px rgba(25,137,250,0.18);
+  box-shadow: 0 4px 24px rgba(25, 137, 250, 0.18);
   padding: 18px 28px !important;
 }
 </style>

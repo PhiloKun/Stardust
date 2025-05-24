@@ -11,9 +11,16 @@ import org.springframework.context.annotation.Configuration;
 
 import java.time.LocalDateTime;
 
+/**
+ * MyBatis-Plus配置类
+ */
 @Configuration
 public class MybatisPlusConfig {
 
+    /**
+     * 配置MyBatis-Plus拦截器
+     * 添加分页插件
+     */
     @Bean
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
@@ -21,6 +28,10 @@ public class MybatisPlusConfig {
         return interceptor;
     }
 
+    /**
+     * 配置元数据处理器
+     * 自动填充创建时间和更新时间
+     */
     @Bean
     public MetaObjectHandler metaObjectHandler() {
         return new MetaObjectHandler() {
@@ -37,8 +48,12 @@ public class MybatisPlusConfig {
         };
     }
 
+    /**
+     * 配置自定义配置器
+     * 启用生成的短键
+     */
     @Bean
     public ConfigurationCustomizer configurationCustomizer() {
         return configuration -> configuration.setUseGeneratedShortKey(true);
     }
-} 
+}

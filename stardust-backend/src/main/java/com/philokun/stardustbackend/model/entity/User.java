@@ -2,7 +2,7 @@ package com.philokun.stardustbackend.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
@@ -24,7 +24,7 @@ public class User {
     private String username;
 
     /**
-     * 密码哈希
+     * 密码
      */
     private String password;
 
@@ -36,37 +36,17 @@ public class User {
     /**
      * 个人简介
      */
-    private String signature;
-
-    /**
-     * 粉丝数
-     */
-    private Integer followers;
-
-    /**
-     * 关注数
-     */
-    private Integer following;
-
-    /**
-     * 作品数
-     */
-    private Integer posts;
-
-    /**
-     * 获赞数
-     */
-    private Integer likes;
+    private String profile;
 
     /**
      * 注册时间
      */
     @TableField(fill = FieldFill.INSERT)
-    private Date createdTime;
+    private LocalDateTime createdTime;
 
     /**
      * 更新时间
      */
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private Date updatedTime;
+    private LocalDateTime updatedTime;
 }

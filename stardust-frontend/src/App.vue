@@ -80,4 +80,14 @@ const showTabbar = computed(() => {
   --van-text-color-2: #aaaaaa;
   --van-border-color: #272729;
 }
+
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--text-color);
+  min-height: 100vh;
+  background-color: var(--background-color);
+  font-weight: 500;
+}
 </style>

@@ -4,7 +4,8 @@ import com.philokun.stardustbackend.common.R;
 import com.philokun.stardustbackend.model.dto.user.UserLoginRequest;
 import com.philokun.stardustbackend.model.dto.user.UserRegisterRequest;
 import com.philokun.stardustbackend.model.vo.user.UserRegisterVO;
-import com.philokun.stardustbackend.model.vo.user.UserVO;
+import com.philokun.stardustbackend.model.vo.user.UserLoginVO;
+import com.philokun.stardustbackend.model.vo.user.UserInfoVO;
 import com.philokun.stardustbackend.service.UserService;
 import lombok.RequiredArgsConstructor;
 
@@ -25,14 +26,14 @@ public class UserController {
 
 
     @PostMapping("/login")
-    public R<UserVO> login(@RequestBody UserLoginRequest request) {
-        UserVO userVO = userService.login(request);
-        return R.success("登录成功", userVO);
+    public R<UserLoginVO> login(@RequestBody UserLoginRequest request) {
+        UserLoginVO userLoginVO = userService.login(request);
+        return R.success("登录成功", userLoginVO);
     }
 
     @GetMapping("/{id}")
-    public R<UserVO> getUserInfo(@PathVariable Long id) {
-        UserVO userVO = userService.getUserInfo(id);
-        return R.success("获取用户信息成功", userVO);
+    public R<UserInfoVO> getUserInfo(@PathVariable Long id) {
+        UserInfoVO userInfoVO = userService.getUserInfo(id);
+        return R.success("获取用户信息成功", userInfoVO);
     }
 } 
