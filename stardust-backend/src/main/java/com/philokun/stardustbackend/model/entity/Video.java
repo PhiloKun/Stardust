@@ -17,17 +17,12 @@ public class Video {
      * 视频ID
      */
     @TableId(type = IdType.ASSIGN_ID)
-    private Long id;
+    private String id;
 
     /**
-     * 视频标题
+     * 视频描述
      */
-    private String title;
-
-    /**
-     * 视频封面
-     */
-    private String cover;
+    private String description;
 
     /**
      * 视频标签
@@ -42,22 +37,12 @@ public class Video {
     /**
      * 上传用户ID
      */
-    private Long userId;
+    private String userId;
 
     /**
      * 视频状态 (例如: 0-待审核, 1-已发布, 2-已屏蔽)
      */
     private Integer status;
-
-    /**
-     * 点赞数
-     */ 
-    private Long likeCount;
-
-    /**
-     * 评论数
-     */
-    private Long commentCount;
 
     /**
      * 上传时间

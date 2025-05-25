@@ -28,7 +28,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // 允许注册、登录和健康检查接口无需认证
-                        .requestMatchers("/user/**","/health").permitAll()
+                        .requestMatchers("/user/**","/health","/video/**").permitAll()
                         // 允许Swagger相关接口无需认证
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/doc.html", "/swagger-resources/**",
                                 "/webjars/**").permitAll()

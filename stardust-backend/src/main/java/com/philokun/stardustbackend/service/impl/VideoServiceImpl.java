@@ -3,54 +3,122 @@ package com.philokun.stardustbackend.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.philokun.stardustbackend.mapper.VideoMapper;
+import com.philokun.stardustbackend.model.dto.video.VideoPublishRequest;
 import com.philokun.stardustbackend.model.entity.Video;
-import com.philokun.stardustbackend.model.vo.video.VideoVO;
+import com.philokun.stardustbackend.model.vo.video.VideoInfoVO;
+import com.philokun.stardustbackend.model.vo.video.VideoPublishVO;
 import com.philokun.stardustbackend.service.VideoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.stream.Collectors;
+import com.philokun.stardustbackend.utils.MinioUtils;
+import io.minio.errors.MinioException;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.InputStream;
 
 @Service
 @RequiredArgsConstructor
 public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements VideoService {
 
     private final VideoMapper videoMapper;
+    private final MinioUtils minioUtils;
 
     @Override
-    public boolean uploadVideo(Video video) {
-        // TODO: 实现视频上传逻辑，包括文件存储（如MinIO）和数据库记录
-        // 插入视频记录到数据库
-        int result = videoMapper.insert(video);
-        return result > 0;
+    public VideoPublishVO uploadVideo(VideoPublishRequest request) {
+        // TODO: Implement actual video file upload logic here using Minio or another storage service.
+        // The result should be the URL or path where the video is stored.
+        // String videoUrl = "dummy_url"; // Replace with actual upload result
+
+        String videoUrl;
+        try {
+            // Get file details from the request
+            MultipartFile videoFile = request.getVideoFile();
+            if (videoFile == null || videoFile.isEmpty()) {
+                throw new RuntimeException("视频文件不能为空");
+            }
+
+            // Generate a unique object name (e.g., using UUID and original file extension)
+            String originalFilename = videoFile.getOriginalFilename();
+            String fileExtension = originalFilename != null && originalFilename.contains(".") ?
+                                   originalFilename.substring(originalFilename.lastIndexOf(".")) : "";
+            // 使用用户ID和UUID组合生成唯一的文件名，便于管理和追踪
+            String objectName = String.format("videos/%d/%s%s", request.getUserId(), java.util.UUID.randomUUID().toString(), fileExtension);
+
+            // Get input stream and content type
+            InputStream inputStream = videoFile.getInputStream();
+            String contentType = videoFile.getContentType();
+            if (contentType == null || contentType.isEmpty()) {
+                 contentType = "application/octet-stream"; // Default content type
+            }
+
+            // Upload file to MinIO
+            videoUrl = minioUtils.uploadFile(inputStream, objectName, contentType);
+
+        } catch (MinioException e) {
+            // Log the exception and throw a meaningful runtime exception
+            e.printStackTrace(); // Consider using a logger instead
+            throw new RuntimeException("视频上传到存储服务失败: " + e.getMessage());
+        } catch (java.io.IOException e) {
+             e.printStackTrace(); // Consider using a logger instead
+             throw new RuntimeException("读取视频文件失败: " + e.getMessage());
+        }
+
+        Video video = new Video();
+        // Copy common properties
+        BeanUtils.copyProperties(request, video);
+
+        // Manually set fields that are not directly copied or require transformation
+        video.setVideoUrl(videoUrl);
+        video.setTags(String.join(",", request.getTags())); // Assuming tags are stored as a comma-separated string
+        video.setStatus(0); // Set initial status, e.g., 0 for pending review
+
+        // Insert video into database
+        boolean success = this.save(video); // Using MyBatis-Plus ServiceImpl's save method
+
+        if (!success) {
+            // Handle insertion failure, maybe throw an exception
+             throw new RuntimeException("视频保存失败");
+        }
+
+        // Prepare and return VideoPublishVO
+        VideoPublishVO videoPublishVO = new VideoPublishVO();
+        videoPublishVO.setId(video.getId()); // Get the generated ID after saving
+        videoPublishVO.setDescription(video.getDescription());
+        videoPublishVO.setVideoUrl(video.getVideoUrl());
+        // Note: VideoPublishVO has List<String> tags, but Video entity has String tags.
+        // You might need to convert back if VideoPublishVO is used to display tags.
+        // For now, only setting fields present in both or manually handled.
+        videoPublishVO.setUserId(video.getUserId());
+        videoPublishVO.setStatus(video.getStatus());
+
+        return videoPublishVO;
     }
 
     @Override
-    public VideoVO getVideoById(Long videoId) {
+    public VideoInfoVO getVideoById(String videoId) {
         // TODO: 实现根据ID获取视频详情的逻辑
         Video video = videoMapper.selectById(videoId);
         if (video == null) {
             return null; // 或者抛出异常
         }
-        VideoVO videoVO = new VideoVO();
-        BeanUtils.copyProperties(video, videoVO);
+        VideoInfoVO videoInfoVO = new VideoInfoVO();
+        BeanUtils.copyProperties(video, videoInfoVO);
         // TODO: 可以根据需要填充其他VO字段，如作者信息等
-        return videoVO;
+        return videoInfoVO;
     }
 
     @Override
-    public List<VideoVO> listVideosByUserId(Long userId) {
+    public List<VideoInfoVO> listVideosByUserId(String userId) {
         // TODO: 实现获取用户发布的视频列表逻辑
         List<Video> videos = videoMapper.selectList(new LambdaQueryWrapper<Video>().eq(Video::getUserId, userId));
         return videos.stream().map(video -> {
-            VideoVO videoVO = new VideoVO();
-            BeanUtils.copyProperties(video, videoVO);
+            VideoInfoVO videoInfoVO = new VideoInfoVO();
+            BeanUtils.copyProperties(video, videoInfoVO);
             // TODO: 可以根据需要填充其他VO字段
-            return videoVO;
+            return videoInfoVO;
         }).collect(Collectors.toList());
     }
 
-    // 可以根据需要添加其他ServiceImpl方法
 } 
