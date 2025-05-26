@@ -4,29 +4,64 @@
     <div class="publish-content">
       <van-tabs v-model="activeTab" shrink>
         <van-tab title="视频" name="video">
-          <VideoUploader :mediaFile="videoFile" :mediaUrl="videoUrl" @update:mediaFile="val => videoFile = val"
-            @update:mediaUrl="val => videoUrl = val" />
+          <VideoUploader
+            :mediaFile="videoFile"
+            :mediaUrl="videoUrl"
+            @update:mediaFile="(val) => (videoFile = val)"
+            @update:mediaUrl="(val) => (videoUrl = val)"
+          />
         </van-tab>
       </van-tabs>
 
-      <van-field v-model="description" rows="6" autosize type="textarea" maxlength="100" show-word-limit
-        placeholder="添加描述" class="desc-field" />
+      <van-field
+        v-model="description"
+        rows="6"
+        autosize
+        type="textarea"
+        maxlength="100"
+        show-word-limit
+        placeholder="添加描述"
+        class="desc-field"
+        clearable="true"
+      />
 
       <div class="tag-input-box">
-        <van-tag v-for="(tag, index) in tags" :key="index" closeable size="medium" type="primary"
-          @close="removeTag(index)">{{ tag }}</van-tag>
-        <input type="text" v-model="newTag" @keyup.enter="addTag"
-          :placeholder="tags.length >= 6 ? '' : '输入标签(可选) (回车添加)'" class="new-tag-input" />
+        <van-tag
+          v-for="(tag, index) in tags"
+          :key="index"
+          size="medium"
+          type="primary"
+          @close="removeTag(index)"
+          >{{ tag }}</van-tag
+        >
+        <van-field
+          v-model="newTag"
+          placeholder="输入标签(可选) (回车添加)"
+          :disabled="tags.length >= 6"
+          @keyup.enter="addTag"
+          class="new-tag-input"
+        >
+          <template #button>
+            <van-icon 
+              name="delete-o" 
+              class="clear-tags-icon"
+              @click="tags = []"
+              v-if="tags.length > 0"
+            />
+          </template>
+        </van-field>
       </div>
 
-      <div class="tag-count">
-        {{ tags.length }}/6
-      </div>
-
+      <div class="tag-count">{{ tags.length }}/6</div>
     </div>
     <div class="publish-footer">
-      <van-button type="primary" block :disabled="!description.trim() || !videoUrl" class="publish-btn"
-        @click="handlePublish">
+      <van-button
+        type="primary"
+        block
+        :disabled="!description.trim() || !videoUrl"
+        class="publish-btn"
+        @click="handlePublish"
+      >
         发布
       </van-button>
     </div>
@@ -34,20 +69,27 @@
 </template>
 
 <script setup>
-import { ref, inject, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import VideoUploader from '@/components/VideoUploader.vue';
-import { showToast } from 'vant';
-import axios from 'axios';
-import { useVideoStore } from '@/stores/videoStore';
-import { storeToRefs } from 'pinia';
-import { useUserStore } from '@/stores/userStore';
+import { ref, inject, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import VideoUploader from "@/components/VideoUploader.vue";
+import { showToast } from "vant";
+import { useVideoStore } from "@/stores/videoStore";
+import { storeToRefs } from "pinia";
+import { useUserStore } from "@/stores/userStore";
 
 const router = useRouter();
-const isDarkMode = inject('darkMode', ref(false));
+const isDarkMode = inject("darkMode", ref(false));
 
 const videoStore = useVideoStore();
-const { activeTab, videoFile, videoUrl, description, tags, newTag, isUploading } = storeToRefs(videoStore);
+const {
+  activeTab,
+  videoFile,
+  videoUrl,
+  description,
+  tags,
+  newTag,
+  isUploading,
+} = storeToRefs(videoStore);
 const { addTag, removeTag, uploadVideo } = videoStore;
 
 const userStore = useUserStore();
@@ -58,17 +100,20 @@ onMounted(() => {
   if (userInfo.value && userInfo.value.id) {
     userId.value = userInfo.value.id;
   } else {
-    const savedUserInfo = localStorage.getItem('userInfo');
+    const savedUserInfo = localStorage.getItem("userInfo");
     if (savedUserInfo) {
       try {
         const userInfoFromLocal = JSON.parse(savedUserInfo);
         if (userInfoFromLocal && userInfoFromLocal.id !== undefined) {
           userId.value = String(userInfoFromLocal.id);
         } else {
-          console.error('Error parsing userId from localStorage or id is missing/invalid.', userInfoFromLocal);
+          console.error(
+            "Error parsing userId from localStorage or id is missing/invalid.",
+            userInfoFromLocal
+          );
         }
       } catch (e) {
-        console.error('Error parsing userInfo from localStorage:', e);
+        console.error("Error parsing userInfo from localStorage:", e);
       }
     }
   }
@@ -80,25 +125,23 @@ function goBack() {
 
 async function handlePublish() {
   if (!userId.value) {
-    showToast('用户信息未加载，请稍后再试或重新登录');
+    showToast("用户信息未加载，请稍后再试或重新登录");
     return;
   }
   await uploadVideo(userId.value);
 }
-
 </script>
 
 <style scoped>
 #publish-page {
   min-height: 100vh;
-  background: #18181c;
-  /* 深色模式下强制深色 */
+  background: #ffffff; /* 浅色模式下使用白色背景 */
   padding-bottom: 80px;
   /* 为固定底部的按钮留出空间 */
 }
 
-.dark-mode {
-  background: #18181c;
+.dark-mode#publish-page {
+  background: #18181c !important; /* 强制深色背景 */
   color: #fff;
 }
 
@@ -115,19 +158,6 @@ async function handlePublish() {
   /* 确保padding不增加宽度 */
 }
 
-/* 移除合并上传区域的样式 */
-/*
-.uploader-area {
-    margin-bottom: 16px;
-    display: flex;
-    gap: 12px;
-}
-
-.uploader-area > div {
-    flex: 1;
-}
-*/
-
 .publish-content :deep(.van-tabs) {
   margin-bottom: 24px;
   /* 为标签页添加底部外边距 */
@@ -136,6 +166,19 @@ async function handlePublish() {
 .desc-field {
   margin-bottom: 20px;
   /* 增加底部外边距 */
+  /* 添加浅色模式下的边框和背景 */
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  background-color: #fff;
+}
+
+.dark-mode .desc-field {
+    border-color: #4a4a52;
+    background-color: #232326;
+}
+
+.dark-mode .desc-field :deep(.van-field__control) {
+  color: #fff !important;
 }
 
 .tag-input-box {
@@ -152,6 +195,8 @@ async function handlePublish() {
   /* 标签和输入框之间的间距 */
   margin-bottom: 16px;
   /* 增加底部外边距 */
+  background-color: #fff;
+  /* 浅色模式下使用白色背景 */
 }
 
 .dark-mode .tag-input-box {
@@ -206,8 +251,8 @@ async function handlePublish() {
   left: 0;
   width: 100%;
   padding: 12px;
-  background: #18181c;
-  /* 深色模式背景 */
+  background: #ffffff;
+  /* 浅色模式下使用白色背景 */
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
   /* 添加阴影 */
   box-sizing: border-box;
@@ -222,15 +267,15 @@ async function handlePublish() {
   /* 确保宽度填满 */
 }
 
+.dark-mode .publish-footer {
+  background: #18181c;
+  /* 深色模式背景 */
+}
+
 .publish-footer .publish-btn {
   font-size: 17px;
   font-weight: 600;
   border-radius: 8px;
-}
-
-.dark-mode .desc-field .van-field__control {
-  background: #232326 !important;
-  color: #fff !important;
 }
 
 /* 去除van-nav-bar底部分割线和阴影 */

@@ -27,10 +27,6 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
 
     @Override
     public VideoPublishVO uploadVideo(VideoPublishRequest request) {
-        // TODO: Implement actual video file upload logic here using Minio or another storage service.
-        // The result should be the URL or path where the video is stored.
-        // String videoUrl = "dummy_url"; // Replace with actual upload result
-
         String videoUrl;
         try {
             // Get file details from the request
@@ -98,25 +94,21 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
 
     @Override
     public VideoInfoVO getVideoById(String videoId) {
-        // TODO: 实现根据ID获取视频详情的逻辑
         Video video = videoMapper.selectById(videoId);
         if (video == null) {
             return null; // 或者抛出异常
         }
         VideoInfoVO videoInfoVO = new VideoInfoVO();
         BeanUtils.copyProperties(video, videoInfoVO);
-        // TODO: 可以根据需要填充其他VO字段，如作者信息等
         return videoInfoVO;
     }
 
     @Override
     public List<VideoInfoVO> listVideosByUserId(String userId) {
-        // TODO: 实现获取用户发布的视频列表逻辑
         List<Video> videos = videoMapper.selectList(new LambdaQueryWrapper<Video>().eq(Video::getUserId, userId));
         return videos.stream().map(video -> {
             VideoInfoVO videoInfoVO = new VideoInfoVO();
             BeanUtils.copyProperties(video, videoInfoVO);
-            // TODO: 可以根据需要填充其他VO字段
             return videoInfoVO;
         }).collect(Collectors.toList());
     }
