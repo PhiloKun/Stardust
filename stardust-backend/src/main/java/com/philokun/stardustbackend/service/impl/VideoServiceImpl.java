@@ -9,6 +9,8 @@ import com.philokun.stardustbackend.model.vo.video.VideoInfoVO;
 import com.philokun.stardustbackend.model.vo.video.VideoPublishVO;
 import com.philokun.stardustbackend.service.VideoService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -19,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements VideoService {
 
@@ -27,6 +30,9 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
 
     @Override
     public VideoPublishVO uploadVideo(VideoPublishRequest request) {
+        System.out.println(request.getTags());
+
+
         String videoUrl;
         try {
             // Get file details from the request
@@ -40,7 +46,7 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
             String fileExtension = originalFilename != null && originalFilename.contains(".") ?
                                    originalFilename.substring(originalFilename.lastIndexOf(".")) : "";
             // 使用用户ID和UUID组合生成唯一的文件名，便于管理和追踪
-            String objectName = String.format("videos/%d/%s%s", request.getUserId(), java.util.UUID.randomUUID().toString(), fileExtension);
+            String objectName = String.format("videos/%s/%s%s", request.getUserId(), java.util.UUID.randomUUID().toString(), fileExtension);
 
             // Get input stream and content type
             InputStream inputStream = videoFile.getInputStream();
@@ -67,7 +73,7 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
 
         // Manually set fields that are not directly copied or require transformation
         video.setVideoUrl(videoUrl);
-        video.setTags(String.join(",", request.getTags())); // Assuming tags are stored as a comma-separated string
+        video.setTags(request.getTags() != null && !request.getTags().isEmpty() ? String.join(",", request.getTags()) : "");
         video.setStatus(0); // Set initial status, e.g., 0 for pending review
 
         // Insert video into database

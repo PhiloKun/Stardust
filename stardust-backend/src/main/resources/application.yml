@@ -11,6 +11,10 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: Asia/Shanghai
+  servlet:
+    multipart:
+      max-file-size: 500MB # 单个视频文件最大上传大小
+      max-request-size: 600MB # 单次请求最大数据大小(包含视频文件和其他表单数据)
 # springdoc-openapi配置
 springdoc:
   swagger-ui:

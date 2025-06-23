@@ -25,12 +25,6 @@
       </template>
     </div>
 
-    <!-- 录制进行中区域 (已移除文字提示) -->
-    <!-- <div v-if="isRecording" class="recording-indicator">
-        <p>正在录制中...</p>
-        <van-button type="danger" size="small" @click="stopRecording">停止录制</van-button>
-    </div> -->
-
     <div v-if="mediaUrl" class="media-preview">
       <video :src="mediaUrl" controls class="preview-video" />
       <van-button icon="delete" type="danger" size="small" @click="removeMedia">移除</van-button>
