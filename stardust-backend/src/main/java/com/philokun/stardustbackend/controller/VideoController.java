@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import com.philokun.stardustbackend.common.R;
 import com.philokun.stardustbackend.model.dto.video.VideoPublishRequest;
 import com.philokun.stardustbackend.model.vo.video.VideoPublishVO;
+import com.philokun.stardustbackend.model.vo.video.VideoInfoVO;
+import java.util.List;
 
 /**
  * 视频控制器
@@ -30,6 +32,15 @@ public class VideoController {
     public R<VideoPublishVO> uploadVideo(VideoPublishRequest request) {
         VideoPublishVO videoPublishVO = videoService.uploadVideo(request);
         return R.success("视频上传成功", videoPublishVO);
+    }
+
+    /**
+     * 获取所有视频列表（推荐页）
+     */
+    @GetMapping("/list")
+    public R<List<VideoInfoVO>> listVideos() {
+        List<VideoInfoVO> videoList = videoService.listAllVideos();
+        return R.success("获取视频列表成功", videoList);
     }
 
 }

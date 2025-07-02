@@ -29,5 +29,11 @@ public interface VideoService {
      * @param userId 用户ID
      * @return 视频VO列表
      */
-    public List<VideoInfoVO> listVideosByUserId(String userId); 
+    public List<VideoInfoVO> listVideosByUserId(String userId);
+
+    /**
+     * 获取所有视频列表（推荐页）
+     * @return 视频VO列表
+     */
+    public List<VideoInfoVO> listAllVideos();
 } 

@@ -1,6 +1,7 @@
 package com.philokun.stardustbackend.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.philokun.stardustbackend.mapper.UserMapper;
 import com.philokun.stardustbackend.model.dto.user.UserLoginRequest;
 import com.philokun.stardustbackend.model.dto.user.UserRegisterRequest;
@@ -18,10 +19,12 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.InputStream;
 
 @Service
 @RequiredArgsConstructor
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
@@ -71,8 +74,6 @@ public class UserServiceImpl implements UserService {
         return userLoginVO;
     }
 
-
-
     @Override
     public UserInfoVO getUserInfo(Long userId) {
         User user = userMapper.selectById(userId);
@@ -87,5 +88,24 @@ public class UserServiceImpl implements UserService {
         return userInfoVO;
     }
 
+    @Override
+    public String uploadAvatar(MultipartFile file, String userId) {
+        if (file == null || file.isEmpty())
+            throw new RuntimeException("文件不能为空");
+        String ext = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf('.'));
+        String objectName = "avatar/" + userId + "_" + System.currentTimeMillis() + ext;
+        String url;
+        try (InputStream in = file.getInputStream()) {
+            url = minioUtils.uploadFile(in, objectName, file.getContentType());
+        } catch (Exception e) {
+            throw new RuntimeException("上传失败: " + e.getMessage());
+        }
+        // 更新用户表
+        User user = new User();
+        user.setId(userId);
+        user.setAvatar(url);
+        this.updateById(user);
+        return url;
+    }
 
-} 
+}

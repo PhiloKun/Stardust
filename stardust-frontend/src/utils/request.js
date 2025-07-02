@@ -40,13 +40,26 @@ service.interceptors.response.use(
     return response
   },
   error => {
-    console.error('响应错误:', 
-      error.config?.url, 
-      error.response?.status, 
+    console.error('响应错误:',
+      error.config?.url,
+      error.response?.status,
       error.response?.data || error.message
     );
     return Promise.reject(error)
   }
 )
 
-export default service 
+export default service
+
+export function fetchVideoList() {
+  return service.get('/video/list');
+}
+
+export function uploadAvatar(file, userId) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('userId', userId);
+  return service.post('/user/avatar', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+} 

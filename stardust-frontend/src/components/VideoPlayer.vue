@@ -3,12 +3,15 @@
     <van-swipe class="video-swipe" :loop="false" vertical :show-indicators="false" @change="onVideoChange" ref="swiper">
       <van-swipe-item v-for="(video, index) in videoList" :key="index">
         <div class="video-container">
-          <!-- 视频播放器 -->
-          <video class="video-player" :src="video.videoUrl" :poster="video.coverUrl" x5-video-player-type="h5"
-            x5-playsinline="true" webkit-playsinline="true" playsinline="true" :ref="(el) => {
-                videoRefs[index] = el;
-              }" loop @click="togglePlay(index)" @timeupdate="updateProgress(index)"
-            @loadedmetadata="videoLoaded(index)" @waiting="onVideoWaiting(index)" @canplay="onVideoCanPlay(index)"></video>
+          <!-- 只渲染当前和下一个视频的video标签 -->
+          <video v-if="shouldLoadVideo(index)" class="video-player" :src="video.videoUrl" :poster="video.coverUrl"
+            x5-video-player-type="h5" x5-playsinline="true" webkit-playsinline="true" playsinline="true"
+            :ref="(el) => { videoRefs[index] = el; }" loop @click="togglePlay(index)"
+            @timeupdate="updateProgress(index)" @loadedmetadata="videoLoaded(index)" @waiting="onVideoWaiting(index)"
+            @canplay="onVideoCanPlay(index)"></video>
+          <!-- 其余只显示封面 -->
+          <img v-else class="video-cover" :src="video.coverUrl" :alt="video.description"
+            style="width:100%;height:100%;object-fit:cover;" />
 
           <!-- 视频加载中状态图标 -->
           <div class="loading-status" v-if="isVideoLoading[index]">
@@ -61,16 +64,13 @@
     </van-swipe>
 
     <!-- 全局进度条，固定在底部 -->
-    <div class="video-progress-container" v-show="showControls"
-      @click.stop="seekVideo($event, currentVideoIndex)"
-      @touchstart.stop="startDrag($event)"
-      @touchmove.stop="onDrag($event)"
-      @touchend.stop="endDrag()"
-      @mousedown.stop="startDragMouse($event)"
-    >
+    <div class="video-progress-container" v-show="showControls" @click.stop="seekVideo($event, currentVideoIndex)"
+      @touchstart.stop="startDrag($event)" @touchmove.stop="onDrag($event)" @touchend.stop="endDrag()"
+      @mousedown.stop="startDragMouse($event)">
       <div class="video-progress">
         <div class="progress-background"></div>
-        <div class="progress-current" :class="{ dragging: isDragging }" :style="{ width: getProgressWidth(currentVideoIndex) }">
+        <div class="progress-current" :class="{ dragging: isDragging }"
+          :style="{ width: getProgressWidth(currentVideoIndex) }">
           <div class="progress-dot"></div>
         </div>
       </div>
@@ -103,14 +103,8 @@
     </div>
 
     <!-- 开启提示按钮，仅在未显示指引时展示 -->
-    <van-button
-      v-if="isPcDevice && !showGuide"
-      class="open-guide-btn"
-      size="mini"
-      type="primary"
-      @click="showGuide = true"
-      icon="question-o"
-    >
+    <van-button v-if="isPcDevice && !showGuide" class="open-guide-btn" size="mini" type="primary"
+      @click="showGuide = true" icon="question-o">
       操作指引
     </van-button>
   </div>
@@ -125,6 +119,7 @@ import {
   computed,
   inject,
 } from "vue";
+import { fetchVideoList } from '@/utils/request';
 
 // 视频引用集合
 const videoRefs = reactive({});
@@ -151,60 +146,7 @@ const isPcDevice = ref(false);
 const isDarkMode = inject("darkMode", ref(false));
 
 // 模拟视频数据
-const videoList = ref([
-  {
-    videoUrl:
-      "https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/byted-player-videos/1.0.0/xgplayer-demo-360p.mp4",
-    coverUrl: "https://pic.616pic.com/bg_w1180/00/11/35/G7cf0897US.jpg",
-    username: "舞动生活",
-    description: "跟随音乐的节奏一起舞动起来",
-    tags: ["舞蹈", "音乐"],
-    likes: "8.7w",
-    comments: "1.8w",
-    avatar: "https://fastly.jsdelivr.net/npm/@vant/assets/tiger.jpeg",
-  },
-  {
-    videoUrl: "https://media.w3.org/2010/05/sintel/trailer.mp4",
-    coverUrl: "https://pic.616pic.com/bg_w1180/00/04/18/j5i38lDy48.jpg",
-    username: "电影爱好者",
-    description: "精彩电影片段分享，带你领略电影的魅力",
-    tags: ["电影", "预告片"],
-    likes: "9.6w",
-    comments: "2.4w",
-    avatar: "https://fastly.jsdelivr.net/npm/@vant/assets/apple-3.jpeg",
-  },
-  {
-    videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
-    coverUrl: "https://pic.616pic.com/bg_w1180/00/15/72/N8cf0897US.jpg",
-    username: "美食达人",
-    description: "今天教大家做一道美味的家常菜",
-    tags: ["美食", "烹饪", "家常菜"],
-    likes: "12.3w",
-    comments: "3.5w",
-    avatar: "https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg",
-  },
-  {
-    videoUrl:
-      "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4",
-    coverUrl: "https://pic.616pic.com/bg_w1180/00/19/83/K7cf0897US.jpg",
-    username: "旅行者小张",
-    description: "带你探索世界各地的美景",
-    tags: ["旅行", "风景", "vlog"],
-    likes: "15.6w",
-    comments: "4.2w",
-    avatar: "https://fastly.jsdelivr.net/npm/@vant/assets/ipad.jpeg",
-  },
-  {
-    videoUrl: "https://download.samplelib.com/mp4/sample-5s.mp4",
-    coverUrl: "https://pic.616pic.com/bg_w1180/00/21/94/P8cf0897US.jpg",
-    username: "萌宠日记",
-    description: "记录我家可爱宠物的日常",
-    tags: ["萌宠", "猫咪", "宠物"],
-    likes: "20.1w",
-    comments: "5.8w",
-    avatar: "https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg",
-  }
-]);
+const videoList = ref([]);
 
 // 检测设备类型
 const checkDeviceType = () => {
@@ -215,9 +157,16 @@ const checkDeviceType = () => {
 };
 
 // 在组件挂载后播放第一个视频
-onMounted(() => {
+onMounted(async () => {
   checkDeviceType();
-
+  try {
+    const res = await fetchVideoList();
+    if (res && res.data && res.data.data) {
+      videoList.value = res.data.data;
+    }
+  } catch (e) {
+    console.error('获取视频列表失败', e);
+  }
   setTimeout(() => {
     playVideo(0);
   }, 100);
@@ -555,6 +504,13 @@ const endDragMouse = () => {
     video.play();
   }
 };
+
+function shouldLoadVideo(index) {
+  return (
+    index === currentVideoIndex.value ||
+    index === currentVideoIndex.value + 1
+  );
+}
 </script>
 
 <style scoped>
@@ -618,7 +574,8 @@ const endDragMouse = () => {
 
 .video-progress {
   width: 100%;
-  height: 6px; /* 加粗更明显 */
+  height: 6px;
+  /* 加粗更明显 */
   position: relative;
   cursor: pointer;
 }
@@ -634,10 +591,12 @@ const endDragMouse = () => {
 .progress-current {
   position: absolute;
   height: 100%;
-  background-color: #fe2c55; /* 红色 */
+  background-color: #fe2c55;
+  /* 红色 */
   border-radius: 3px;
   transition: width 0.1s, background-color 0.2s;
 }
+
 .progress-current.dragging {
   background-color: #1989fa !important;
 }
@@ -793,7 +752,15 @@ const endDragMouse = () => {
   transition: opacity 0.2s;
   pointer-events: auto;
 }
+
 .open-guide-btn:hover {
   opacity: 0.85;
+}
+
+.video-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
 }
 </style>

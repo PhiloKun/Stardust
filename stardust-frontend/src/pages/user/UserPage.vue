@@ -5,26 +5,18 @@
         <van-icon name="wap-nav" size="25" @click="showSidebar = true" />
       </template>
       <template #right>
-        <van-icon
-          v-if="isLoggedIn"
-          name="setting-o"
-          size="24"
-          @click="showSettingSidebar = true"
-        />
+        <van-icon v-if="isLoggedIn" name="setting-o" size="24" @click="showSettingSidebar = true" />
       </template>
     </van-nav-bar>
 
     <div v-if="isLoggedIn" class="user-content">
       <!-- 用户基本信息 -->
       <div class="user-header">
-        <div class="user-avatar">
-          <van-image
-            round
-            width="80"
-            height="80"
-            :src="userInfo.avatar"
-            :error-content="userInfo.username.charAt(0).toUpperCase()"
-          />
+        <div class="user-avatar" @click="onEditAvatar">
+          <van-image round width="80" height="80" :src="userInfo.avatar"
+            :error-content="userInfo.username.charAt(0).toUpperCase()" />
+          <input ref="avatarInput" type="file" accept="image/*" style="display:none" @change="onAvatarChange" />
+          <van-icon name="edit" class="avatar-edit-icon" />
         </div>
         <div class="user-info">
           <h2>{{ userInfo.username }}</h2>
@@ -33,30 +25,16 @@
             <span class="user-bio">{{
               userInfo.profile || "这个人很低调，什么都没写~"
             }}</span>
-            <van-icon
-              name="edit"
-              class="edit-icon"
-              @click="showEditSignature"
-            />
+            <van-icon name="edit" class="edit-icon" @click="showEditSignature" />
           </div>
         </div>
       </div>
 
       <!-- 视频内容标签页 -->
-      <van-tabs
-        v-model="activeTab"
-        sticky
-        animated
-        swipeable
-        class="video-tabs"
-      >
+      <van-tabs v-model="activeTab" sticky animated swipeable class="video-tabs">
         <van-tab name="works" title="作品">
           <div class="video-grid" v-if="userVideos.length > 0">
-            <div
-              v-for="(video, index) in userVideos"
-              :key="index"
-              class="video-item"
-            >
+            <div v-for="(video, index) in userVideos" :key="index" class="video-item">
               <div class="video-cover">
                 <img :src="video.cover" alt="视频封面" />
               </div>
@@ -66,13 +44,7 @@
           </div>
           <div v-else class="empty-content">
             <van-empty image="search" description="还没有发布作品">
-              <van-button
-                round
-                type="primary"
-                size="small"
-                icon="plus"
-                @click="toPublish"
-              >
+              <van-button round type="primary" size="small" icon="plus" @click="toPublish">
                 发布视频
               </van-button>
             </van-empty>
@@ -95,43 +67,21 @@
 
     <!-- 未登录状态 -->
     <div v-else class="not-logged-in">
-      <van-empty
-        description="您尚未登录"
-        image="https://fastly.jsdelivr.net/npm/@vant/assets/custom-empty-image.png"
-      >
+      <van-empty description="您尚未登录" image="https://fastly.jsdelivr.net/npm/@vant/assets/custom-empty-image.png">
         <van-button round type="primary" size="small" @click="toLogin">
           立即登录/注册
         </van-button>
       </van-empty>
     </div>
-    <SidebarMenu
-      :model-value="showSidebar"
-      @update:model-value="showSidebar = $event"
-      :dark-mode="isDarkMode"
-      @update:dark-mode="isDarkMode = $event"
-    />
+    <SidebarMenu :model-value="showSidebar" @update:model-value="showSidebar = $event" :dark-mode="isDarkMode"
+      @update:dark-mode="isDarkMode = $event" />
     <!-- 编辑简介弹窗 -->
-    <van-dialog
-      v-model="showSignatureDialog"
-      title="编辑个人简介"
-      show-cancel-button
-      @confirm="updateSignature"
-    >
-      <van-field
-        v-model="tempSignature"
-        type="textarea"
-        placeholder="请输入您的个人简介"
-        rows="3"
-        maxlength="50"
-        show-word-limit
-      />
+    <van-dialog v-model="showSignatureDialog" title="编辑个人简介" show-cancel-button @confirm="updateSignature">
+      <van-field v-model="tempSignature" type="textarea" placeholder="请输入您的个人简介" rows="3" maxlength="50"
+        show-word-limit />
     </van-dialog>
     <!-- 设置侧边栏 -->
-    <UserSettingSidebar
-      v-model="showSettingSidebar"
-      :dark-mode="isDarkMode"
-      @logout="confirmLogout"
-    />
+    <UserSettingSidebar v-model="showSettingSidebar" :dark-mode="isDarkMode" @logout="confirmLogout" />
   </div>
 </template>
 
@@ -142,6 +92,7 @@ import SidebarMenu from "@/components/SidebarMenu.vue";
 import UserSettingSidebar from "@/components/UserSettingSidebar.vue";
 import { showToast } from "vant";
 import { useUserStore } from "@/stores/userStore";
+import { uploadAvatar } from '@/utils/request';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -204,6 +155,7 @@ const userVideos = ref([
   },
 ]);
 
+const avatarInput = ref(null);
 
 // 在组件挂载时检查登录状态
 onMounted(async () => {
@@ -211,9 +163,9 @@ onMounted(async () => {
     // 如果已登录，先更新本地 userInfo，然后从后端获取最新详情
     updateUserInfo();
     if (userStore.userInfo && userStore.userInfo.id) {
-        await userStore.fetchUserInfo(userStore.userInfo.id);
-        // 获取最新详情后再次更新本地 userInfo
-        updateUserInfo();
+      await userStore.fetchUserInfo(userStore.userInfo.id);
+      // 获取最新详情后再次更新本地 userInfo
+      updateUserInfo();
     }
   } else {
     router.replace("/login");
@@ -229,18 +181,18 @@ const updateUserInfo = () => {
 
 // 显示编辑简介弹窗
 const showEditSignature = () => {
-    tempSignature.value = userInfo.value.profile;
-    showSignatureDialog.value = true;
+  tempSignature.value = userInfo.value.profile;
+  showSignatureDialog.value = true;
 };
 
 // 更新简介
 const updateSignature = () => {
-    // TODO: 调用后端接口更新用户简介
-    console.log("更新简介:", tempSignature.value);
-    // 更新本地 userInfo
-    userInfo.value.profile = tempSignature.value;
-    // 关闭弹窗
-    showSignatureDialog.value = false;
+  // TODO: 调用后端接口更新用户简介
+  console.log("更新简介:", tempSignature.value);
+  // 更新本地 userInfo
+  userInfo.value.profile = tempSignature.value;
+  // 关闭弹窗
+  showSignatureDialog.value = false;
 };
 
 // 前往登录页
@@ -279,6 +231,21 @@ const confirmLogout = () => {
     });
   }
 };
+
+function onEditAvatar() {
+  avatarInput.value && avatarInput.value.click();
+}
+
+async function onAvatarChange(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const res = await uploadAvatar(file, userInfo.value.id);
+  if (res && res.data && res.data.data) {
+    userInfo.value.avatar = res.data.data;
+    userStore.userInfo.avatar = res.data.data;
+    showToast('头像更新成功');
+  }
+}
 </script>
 
 <style scoped>
@@ -456,5 +423,23 @@ const confirmLogout = () => {
   font-weight: bold;
   box-shadow: 0 4px 24px rgba(25, 137, 250, 0.18);
   padding: 18px 28px !important;
+}
+
+.avatar-edit-icon {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  background: #fff;
+  border-radius: 50%;
+  padding: 2px;
+  font-size: 18px;
+  color: #1989fa;
+  cursor: pointer;
+}
+
+.user-avatar {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
 }
 </style>

@@ -3,8 +3,10 @@ package com.philokun.stardustbackend.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.philokun.stardustbackend.mapper.VideoMapper;
+import com.philokun.stardustbackend.mapper.UserMapper;
 import com.philokun.stardustbackend.model.dto.video.VideoPublishRequest;
 import com.philokun.stardustbackend.model.entity.Video;
+import com.philokun.stardustbackend.model.entity.User;
 import com.philokun.stardustbackend.model.vo.video.VideoInfoVO;
 import com.philokun.stardustbackend.model.vo.video.VideoPublishVO;
 import com.philokun.stardustbackend.service.VideoService;
@@ -19,6 +21,7 @@ import com.philokun.stardustbackend.utils.MinioUtils;
 import io.minio.errors.MinioException;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
+import java.util.Arrays;
 
 @Service
 @Slf4j
@@ -27,11 +30,11 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
 
     private final VideoMapper videoMapper;
     private final MinioUtils minioUtils;
+    private final UserMapper userMapper;
 
     @Override
     public VideoPublishVO uploadVideo(VideoPublishRequest request) {
         System.out.println(request.getTags());
-
 
         String videoUrl;
         try {
@@ -43,16 +46,18 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
 
             // Generate a unique object name (e.g., using UUID and original file extension)
             String originalFilename = videoFile.getOriginalFilename();
-            String fileExtension = originalFilename != null && originalFilename.contains(".") ?
-                                   originalFilename.substring(originalFilename.lastIndexOf(".")) : "";
+            String fileExtension = originalFilename != null && originalFilename.contains(".")
+                    ? originalFilename.substring(originalFilename.lastIndexOf("."))
+                    : "";
             // 使用用户ID和UUID组合生成唯一的文件名，便于管理和追踪
-            String objectName = String.format("videos/%s/%s%s", request.getUserId(), java.util.UUID.randomUUID().toString(), fileExtension);
+            String objectName = String.format("videos/%s/%s%s", request.getUserId(),
+                    java.util.UUID.randomUUID().toString(), fileExtension);
 
             // Get input stream and content type
             InputStream inputStream = videoFile.getInputStream();
             String contentType = videoFile.getContentType();
             if (contentType == null || contentType.isEmpty()) {
-                 contentType = "application/octet-stream"; // Default content type
+                contentType = "application/octet-stream"; // Default content type
             }
 
             // Upload file to MinIO
@@ -63,8 +68,8 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
             e.printStackTrace(); // Consider using a logger instead
             throw new RuntimeException("视频上传到存储服务失败: " + e.getMessage());
         } catch (java.io.IOException e) {
-             e.printStackTrace(); // Consider using a logger instead
-             throw new RuntimeException("读取视频文件失败: " + e.getMessage());
+            e.printStackTrace(); // Consider using a logger instead
+            throw new RuntimeException("读取视频文件失败: " + e.getMessage());
         }
 
         Video video = new Video();
@@ -73,7 +78,8 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
 
         // Manually set fields that are not directly copied or require transformation
         video.setVideoUrl(videoUrl);
-        video.setTags(request.getTags() != null && !request.getTags().isEmpty() ? String.join(",", request.getTags()) : "");
+        video.setTags(
+                request.getTags() != null && !request.getTags().isEmpty() ? String.join(",", request.getTags()) : "");
         video.setStatus(0); // Set initial status, e.g., 0 for pending review
 
         // Insert video into database
@@ -81,7 +87,7 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
 
         if (!success) {
             // Handle insertion failure, maybe throw an exception
-             throw new RuntimeException("视频保存失败");
+            throw new RuntimeException("视频保存失败");
         }
 
         // Prepare and return VideoPublishVO
@@ -119,4 +125,29 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
         }).collect(Collectors.toList());
     }
 
-} 
+    @Override
+    public List<VideoInfoVO> listAllVideos() {
+        List<Video> videos = videoMapper.selectList(null);
+        return videos.stream().map(video -> {
+            VideoInfoVO vo = new VideoInfoVO();
+            BeanUtils.copyProperties(video, vo);
+            // 查询作者信息
+            User user = userMapper.selectById(video.getUserId());
+            if (user != null) {
+                vo.setUsername(user.getUsername());
+                vo.setAvatar(user.getAvatar());
+            }
+            // 修复标签字段
+            if (video.getTags() != null && !video.getTags().isEmpty()) {
+                vo.setTags(Arrays.asList(video.getTags().split(",")));
+            } else {
+                vo.setTags(null);
+            }
+            // 假设点赞和评论数暂为0，后续可扩展
+            vo.setLikes(0);
+            vo.setComments(0);
+            return vo;
+        }).collect(Collectors.toList());
+    }
+
+}

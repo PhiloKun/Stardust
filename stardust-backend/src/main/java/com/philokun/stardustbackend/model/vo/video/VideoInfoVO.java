@@ -12,4 +12,9 @@ public class VideoInfoVO {
     private List<String> tags;
     private String userId;
     private Integer status;
+    private String coverUrl;
+    private String username;
+    private String avatar;
+    private Integer likes;
+    private Integer comments;
 } 
