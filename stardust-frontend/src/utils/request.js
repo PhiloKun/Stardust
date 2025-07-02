@@ -62,4 +62,18 @@ export function uploadAvatar(file, userId) {
   return service.post('/user/avatar', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   });
+}
+
+export function fetchUserVideos(userId) {
+  return service.get(`/video/user/${userId}`);
+}
+
+export function uploadVideoChunk(formData) {
+  return service.post('/video/upload-chunk', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+}
+
+export function mergeVideoChunks(data) {
+  return service.post('/video/merge-chunks', data);
 } 

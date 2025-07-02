@@ -30,7 +30,7 @@ public class Video {
     private String tags;
 
     /**
-     * 视频存储路径或URL
+     * 视频对象名（目录格式）
      */
     private String videoUrl;
 
@@ -55,4 +55,9 @@ public class Video {
      */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedTime;
+
+    /**
+     * 视频封面对象名（目录格式）
+     */
+    private String cover;
 }

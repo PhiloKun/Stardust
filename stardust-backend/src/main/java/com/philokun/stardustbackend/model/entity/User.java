@@ -29,7 +29,7 @@ public class User {
     private String password;
 
     /**
-     * 头像URL
+     * 头像对象名（目录格式）
      */
     private String avatar;
 

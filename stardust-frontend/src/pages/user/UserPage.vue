@@ -24,7 +24,7 @@
           <div class="user-bio-row">
             <span class="user-bio">{{
               userInfo.profile || "这个人很低调，什么都没写~"
-            }}</span>
+              }}</span>
             <van-icon name="edit" class="edit-icon" @click="showEditSignature" />
           </div>
         </div>
@@ -92,7 +92,7 @@ import SidebarMenu from "@/components/SidebarMenu.vue";
 import UserSettingSidebar from "@/components/UserSettingSidebar.vue";
 import { showToast } from "vant";
 import { useUserStore } from "@/stores/userStore";
-import { uploadAvatar } from '@/utils/request';
+import { uploadAvatar, fetchUserVideos } from '@/utils/request';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -121,39 +121,8 @@ const tempSignature = ref("");
 // 设置侧边栏
 const showSettingSidebar = ref(false);
 
-// 模拟用户视频数据
-const userVideos = ref([
-  {
-    id: "1",
-    title: "如何开始创作视频",
-    cover: "https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg",
-  },
-  {
-    id: "2",
-    title: "星屑平台使用教程",
-    cover: "https://fastly.jsdelivr.net/npm/@vant/assets/apple-1.jpeg",
-  },
-  {
-    id: "3",
-    title: "我的第一个作品",
-    cover: "https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg",
-  },
-  {
-    id: "4",
-    title: "视频剪辑技巧分享",
-    cover: "https://fastly.jsdelivr.net/npm/@vant/assets/apple-2.jpeg",
-  },
-  {
-    id: "5",
-    title: "摄影入门指南",
-    cover: "https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg",
-  },
-  {
-    id: "6",
-    title: "后期制作教程",
-    cover: "https://fastly.jsdelivr.net/npm/@vant/assets/apple-3.jpeg",
-  },
-]);
+// 用户视频数据
+const userVideos = ref([]);
 
 const avatarInput = ref(null);
 
@@ -166,6 +135,11 @@ onMounted(async () => {
       await userStore.fetchUserInfo(userStore.userInfo.id);
       // 获取最新详情后再次更新本地 userInfo
       updateUserInfo();
+      // 获取用户视频
+      const res = await fetchUserVideos(userStore.userInfo.id);
+      if (res && res.data && res.data.data) {
+        userVideos.value = res.data.data;
+      }
     }
   } else {
     router.replace("/login");

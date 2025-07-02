@@ -93,19 +93,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (file == null || file.isEmpty())
             throw new RuntimeException("文件不能为空");
         String ext = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf('.'));
-        String objectName = "avatar/" + userId + "_" + System.currentTimeMillis() + ext;
-        String url;
+        String objectName = "avatar/" + userId+"/" + System.currentTimeMillis() + ext;
         try (InputStream in = file.getInputStream()) {
-            url = minioUtils.uploadFile(in, objectName, file.getContentType());
+            minioUtils.uploadFile(in, objectName, file.getContentType());
         } catch (Exception e) {
             throw new RuntimeException("上传失败: " + e.getMessage());
         }
-        // 更新用户表
+        // 更新用户表，只存储对象名
         User user = new User();
         user.setId(userId);
-        user.setAvatar(url);
+        user.setAvatar(objectName);
         this.updateById(user);
-        return url;
+        // 返回完整url给前端
+        return minioUtils.getFileUrl(minioConfig.getBucketName(), objectName);
     }
 
 }

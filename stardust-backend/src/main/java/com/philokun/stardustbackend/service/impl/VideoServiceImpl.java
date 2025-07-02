@@ -22,6 +22,10 @@ import io.minio.errors.MinioException;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
+import java.io.File;
 
 @Service
 @Slf4j
@@ -61,7 +65,8 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
             }
 
             // Upload file to MinIO
-            videoUrl = minioUtils.uploadFile(inputStream, objectName, contentType);
+            minioUtils.uploadFile(inputStream, objectName, contentType);
+            videoUrl = objectName;
 
         } catch (MinioException e) {
             // Log the exception and throw a meaningful runtime exception
@@ -121,6 +126,14 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
         return videos.stream().map(video -> {
             VideoInfoVO videoInfoVO = new VideoInfoVO();
             BeanUtils.copyProperties(video, videoInfoVO);
+            // 封面url
+            if (video.getCover() != null) {
+                videoInfoVO.setCoverUrl(minioUtils.getFileUrl("stardust", video.getCover()));
+            }
+            // 视频url
+            if (video.getVideoUrl() != null) {
+                videoInfoVO.setVideoUrl(minioUtils.getFileUrl("stardust", video.getVideoUrl()));
+            }
             return videoInfoVO;
         }).collect(Collectors.toList());
     }
@@ -143,11 +156,41 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
             } else {
                 vo.setTags(null);
             }
+            // 封面url
+            if (video.getCover() != null) {
+                vo.setCoverUrl(minioUtils.getFileUrl("stardust", video.getCover()));
+            }
             // 假设点赞和评论数暂为0，后续可扩展
             vo.setLikes(0);
             vo.setComments(0);
+            // 视频url
+            if (video.getVideoUrl() != null) {
+                vo.setVideoUrl(minioUtils.getFileUrl("stardust", video.getVideoUrl()));
+            }
             return vo;
         }).collect(Collectors.toList());
+    }
+
+    // 占位图生成方法
+    private File generatePlaceholderCover(String title, String username) throws Exception {
+        int width = 720, height = 1280;
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = image.createGraphics();
+        // 背景渐变
+        GradientPaint gp = new GradientPaint(0, 0, Color.BLUE, width, height, Color.CYAN);
+        g.setPaint(gp);
+        g.fillRect(0, 0, width, height);
+        // 标题
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("微软雅黑", Font.BOLD, 48));
+        g.drawString(title != null ? title : "视频", 40, height / 2);
+        // 用户名
+        g.setFont(new Font("微软雅黑", Font.PLAIN, 32));
+        g.drawString(username != null ? ("@" + username) : "", 40, height / 2 + 60);
+        g.dispose();
+        File tempCover = File.createTempFile("cover_", ".jpg");
+        ImageIO.write(image, "jpg", tempCover);
+        return tempCover;
     }
 
 }
