@@ -26,6 +26,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import java.io.File;
+import java.util.Collections;
 
 @Service
 @Slf4j
@@ -141,6 +142,9 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
     @Override
     public List<VideoInfoVO> listAllVideos() {
         List<Video> videos = videoMapper.selectList(null);
+        // 随机打乱顺序
+        Collections.shuffle(videos);
+        // TODO: 可扩展：支持前端传递已看过视频ID列表，过滤已看过的视频
         return videos.stream().map(video -> {
             VideoInfoVO vo = new VideoInfoVO();
             BeanUtils.copyProperties(video, vo);
@@ -148,27 +152,22 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
             User user = userMapper.selectById(video.getUserId());
             if (user != null) {
                 vo.setUsername(user.getUsername());
-                // 头像字段返回完整URL
                 if (user.getAvatar() != null && !user.getAvatar().isEmpty()) {
                     vo.setAvatar(minioUtils.getFileUrl("stardust", user.getAvatar()));
                 } else {
-                    vo.setAvatar(null); // 或设置为默认头像URL
+                    vo.setAvatar(null);
                 }
             }
-            // 修复标签字段
             if (video.getTags() != null && !video.getTags().isEmpty()) {
                 vo.setTags(Arrays.asList(video.getTags().split(",")));
             } else {
                 vo.setTags(null);
             }
-            // 封面url
             if (video.getCover() != null) {
                 vo.setCoverUrl(minioUtils.getFileUrl("stardust", video.getCover()));
             }
-            // 假设点赞和评论数暂为0，后续可扩展
             vo.setLikes(0);
             vo.setComments(0);
-            // 视频url
             if (video.getVideoUrl() != null) {
                 vo.setVideoUrl(minioUtils.getFileUrl("stardust", video.getVideoUrl()));
             }
