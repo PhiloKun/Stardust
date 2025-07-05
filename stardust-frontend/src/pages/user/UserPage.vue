@@ -34,6 +34,10 @@
       <van-tabs v-model="activeTab" sticky animated swipeable class="video-tabs">
         <van-tab name="works" title="作品">
           <div class="video-grid" v-if="userVideos.length > 0">
+            <div class="video-item publish-item" @click="toPublish">
+              <div class="publish-plus">+</div>
+              <div class="video-title">发布</div>
+            </div>
             <div v-for="(video, index) in userVideos" :key="index" class="video-item">
               <div class="video-cover">
                 <img :src="video.cover" alt="视频封面" />
@@ -415,5 +419,33 @@ async function onAvatarChange(e) {
   position: relative;
   display: inline-block;
   cursor: pointer;
+}
+
+.publish-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1989fa 60%, #4fc3f7 100%);
+  color: #fff;
+  cursor: pointer;
+  transition: box-shadow 0.18s, transform 0.18s;
+  box-shadow: 0 2px 8px rgba(25,137,250,0.10);
+}
+.publish-item:hover {
+  box-shadow: 0 4px 16px rgba(25,137,250,0.18);
+  transform: scale(1.04);
+}
+.publish-plus {
+  font-size: 38px;
+  font-weight: bold;
+  line-height: 1;
+  margin-bottom: 6px;
+  font-family: 'Arial Black', 'Arial', sans-serif;
+}
+.publish-item .video-title {
+  color: #fff;
+  font-size: 13px;
+  margin: 0;
 }
 </style>
