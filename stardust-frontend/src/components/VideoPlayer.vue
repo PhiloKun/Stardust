@@ -49,8 +49,12 @@
               <van-image round width="32" height="32" :src="video.avatar" />
               <span class="username">@{{ video.username }}</span>
             </div>
-            <div class="description">
+            <div class="description"
+                 :class="{ 'desc-collapsed': !descExpandMap[index], 'desc-expanded': descExpandMap[index] }">
               {{ video.description }}
+              <span v-if="isDescOverflow(video.description)" class="desc-toggle" @click="descExpandMap[index] = !descExpandMap[index]">
+                {{ descExpandMap[index] ? '收起' : '展开' }}
+              </span>
             </div>
             <div class="tags" v-if="video.tags && video.tags.length > 0">
               <span class="tag" v-for="(tag, tagIndex) in video.tags" :key="tagIndex">
@@ -146,6 +150,15 @@ const isDarkMode = inject("darkMode", ref(false));
 
 // 模拟视频数据
 const videoList = ref([]);
+
+// 展开/收起简介的状态，key为视频index
+const descExpandMap = reactive({});
+
+// 判断简介是否需要展开按钮
+function isDescOverflow(text) {
+  // 简单判断：字数超过40就显示展开按钮（可根据实际UI调整）
+  return text && text.length > 40;
+}
 
 // 检测设备类型
 const checkDeviceType = () => {
@@ -648,9 +661,12 @@ function shouldLoadVideo(index) {
 }
 
 .description {
-  font-size: 14px;
-  margin-bottom: 8px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  margin-bottom: 2px;
+  font-size: 13px;
+  line-height: 1.4;
+  word-break: break-all;
+  position: relative;
+  color: #fff;
 }
 
 /* 标签样式 */
@@ -817,6 +833,8 @@ function shouldLoadVideo(index) {
   font-size: 13px;
   line-height: 1.4;
   word-break: break-all;
+  position: relative;
+  color: #fff;
 }
 .dy-video-info .tags {
   margin-top: 2px;
@@ -829,6 +847,27 @@ function shouldLoadVideo(index) {
   font-size: 12px;
   margin-right: 4px;
   color: #fff;
+}
+.desc-collapsed {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+}
+.desc-expanded {
+  display: block;
+  overflow: visible;
+  white-space: normal;
+}
+.desc-toggle {
+  color: #4fc3f7;
+  margin-left: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.18);
 }
 @media (max-width: 600px) {
   .dy-video-info {
