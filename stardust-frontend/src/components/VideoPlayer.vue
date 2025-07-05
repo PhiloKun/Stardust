@@ -23,36 +23,35 @@
             <van-icon name="play-circle-o" size="50" color="#fff" />
           </div>
 
-          <!-- 右侧操作栏 -->
-          <div class="action-bar">
+          <!-- 右侧操作栏（抖音风格，竖直居中，靠右） -->
+          <div class="action-bar dy-action-bar">
             <div class="action-item">
-              <van-icon name="like-o" size="30" color="#fff" />
+              <van-icon name="like-o" size="28" color="#fff" />
               <span>{{ video.likes }}</span>
             </div>
             <div class="action-item">
-              <van-icon name="chat-o" size="30" color="#fff" />
+              <van-icon name="chat-o" size="28" color="#fff" />
               <span>{{ video.comments }}</span>
             </div>
             <div class="action-item">
-              <van-icon name="star-o" size="30" color="#fff" />
+              <van-icon name="star-o" size="28" color="#fff" />
               <span>收藏</span>
             </div>
             <div class="action-item">
-              <van-icon name="share-o" size="30" color="#fff" />
+              <van-icon name="share-o" size="28" color="#fff" />
               <span>分享</span>
             </div>
           </div>
 
-          <!-- 底部信息区 -->
-          <div class="video-info">
+          <!-- 左下角信息区（抖音风格） -->
+          <div class="video-info dy-video-info">
             <div class="author">
-              <van-image round width="40" height="40" :src="video.avatar" />
+              <van-image round width="32" height="32" :src="video.avatar" />
               <span class="username">@{{ video.username }}</span>
             </div>
             <div class="description">
               {{ video.description }}
             </div>
-            <!-- 添加标签展示 -->
             <div class="tags" v-if="video.tags && video.tags.length > 0">
               <span class="tag" v-for="(tag, tagIndex) in video.tags" :key="tagIndex">
                 #{{ tag }}
@@ -542,12 +541,8 @@ function shouldLoadVideo(index) {
 
 .video-container {
   position: relative;
-  height: 100%;
   width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #000;
+  height: 100%;
 }
 
 .video-player {
@@ -762,5 +757,87 @@ function shouldLoadVideo(index) {
   height: 100%;
   object-fit: cover;
   background: #000;
+}
+
+/* 抖音风格右侧操作栏 */
+.dy-action-bar {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 10;
+}
+.dy-action-bar .action-item {
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #fff;
+  font-size: 13px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+.dy-action-bar .action-item:last-child {
+  margin-bottom: 0;
+}
+.dy-action-bar .van-icon {
+  margin-bottom: 2px;
+}
+
+/* 抖音风格左下角信息区 */
+.dy-video-info {
+  position: absolute;
+  left: 12px;
+  bottom: 18px;
+  z-index: 10;
+  border-radius: 16px;
+  padding: 10px 16px 10px 10px;
+  max-width: 70vw;
+  min-width: 180px;
+  color: #fff;
+  font-size: 14px;
+}
+.dy-video-info .author {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.dy-video-info .author .van-image {
+  margin-right: 8px;
+}
+.dy-video-info .username {
+  font-weight: 500;
+  font-size: 15px;
+  margin-right: 8px;
+}
+.dy-video-info .description {
+  margin-bottom: 2px;
+  font-size: 13px;
+  line-height: 1.4;
+  word-break: break-all;
+}
+.dy-video-info .tags {
+  margin-top: 2px;
+}
+.dy-video-info .tag {
+  display: inline-block;
+  background: rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 1px 7px;
+  font-size: 12px;
+  margin-right: 4px;
+  color: #fff;
+}
+@media (max-width: 600px) {
+  .dy-video-info {
+    max-width: 90vw;
+    font-size: 13px;
+    padding: 8px 10px 8px 8px;
+  }
+  .dy-action-bar {
+    right: 8px;
+  }
 }
 </style>
