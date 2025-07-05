@@ -556,12 +556,23 @@ function shouldLoadVideo(index) {
   position: relative;
   width: 100%;
   height: 100%;
+  overflow: hidden;
+  background: #000;
+  aspect-ratio: 9/16;
 }
 
 .video-player {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  background: #000;
+  display: block;
+}
+@media (min-width: 800px) {
+  .video-player {
+    object-fit: contain;
+    background: #000;
+  }
 }
 
 /* 视频进度条样式 */
@@ -773,6 +784,7 @@ function shouldLoadVideo(index) {
   height: 100%;
   object-fit: cover;
   background: #000;
+  display: block;
 }
 
 /* 抖音风格右侧操作栏 */
