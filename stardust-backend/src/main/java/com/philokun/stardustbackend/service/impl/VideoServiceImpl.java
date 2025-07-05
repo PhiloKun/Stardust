@@ -148,7 +148,12 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
             User user = userMapper.selectById(video.getUserId());
             if (user != null) {
                 vo.setUsername(user.getUsername());
-                vo.setAvatar(user.getAvatar());
+                // 头像字段返回完整URL
+                if (user.getAvatar() != null && !user.getAvatar().isEmpty()) {
+                    vo.setAvatar(minioUtils.getFileUrl("stardust", user.getAvatar()));
+                } else {
+                    vo.setAvatar(null); // 或设置为默认头像URL
+                }
             }
             // 修复标签字段
             if (video.getTags() != null && !video.getTags().isEmpty()) {
