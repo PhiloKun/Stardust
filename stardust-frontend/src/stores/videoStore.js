@@ -13,6 +13,7 @@ export const useVideoStore = defineStore('video', () => {
     const tags = ref([]);
     const newTag = ref('');
     const isUploading = ref(false); // 上传状态
+    const uploadProgress = ref(0); // 上传进度百分比
 
     // Actions
     const addTag = () => {
@@ -56,10 +57,11 @@ export const useVideoStore = defineStore('video', () => {
 
         if (!userId) {
             showToast('用户信息未加载，请稍后再试或重新登录');
-             return { success: false, message: '用户信息未加载' };
+            return { success: false, message: '用户信息未加载' };
         }
 
         isUploading.value = true; // 设置上传状态为 true
+        uploadProgress.value = 0;
 
         const formData = new FormData();
         formData.append('videoFile', videoFile.value);
@@ -69,21 +71,28 @@ export const useVideoStore = defineStore('video', () => {
 
         try {
             const response = await request.post('/video/upload', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+                headers: { 'Content-Type': 'multipart/form-data' },
+                onUploadProgress: (progressEvent) => {
+                    if (progressEvent.total) {
+                        uploadProgress.value = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+                    }
+                }
             });
-            
+
             if (response.status === 200) {
                 showToast('视频发布成功！');
                 resetForm();
+                uploadProgress.value = 0;
                 return { success: true, data: response.data };
             }
-            
+
             // 统一错误处理
             console.error('视频上传失败:', error.response?.data?.message || error.message);
             showToast('视频发布失败，请稍后重试');
             return { success: false };
         } finally {
             isUploading.value = false;
+            uploadProgress.value = 0;
         }
     };
 
@@ -105,6 +114,7 @@ export const useVideoStore = defineStore('video', () => {
         tags,
         newTag,
         isUploading,
+        uploadProgress,
         addTag,
         removeTag,
         uploadVideo,

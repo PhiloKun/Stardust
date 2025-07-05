@@ -100,6 +100,10 @@
       <!-- 标签数量显示 -->
       <div class="tag-count">{{ tags.length }}/6</div>
     </div>
+    <!-- 上传进度条 -->
+    <div v-if="isUploading && uploadProgress > 0 && uploadProgress < 100" class="upload-progress-bar">
+      <van-progress :percentage="uploadProgress" color="#1989fa" track-color="#e5e5e5" show-pivot pivot-text="{{uploadProgress}}%" />
+    </div>
     <!-- 底部发布按钮 -->
     <div class="publish-footer">
       <van-button
@@ -145,6 +149,7 @@ const {
   tags,
   newTag,
   isUploading,
+  uploadProgress,
 } = storeToRefs(videoStore);
 const { addTag, removeTag, uploadVideo } = videoStore;
 
@@ -496,5 +501,11 @@ async function handlePublish() {
   background-color: #0c346c !important;
   /* 深色模式下调整 van-tag 的背景色 */
   color: #fff !important;
+}
+
+.upload-progress-bar {
+  width: 90%;
+  margin: 0 auto 16px auto;
+  z-index: 100;
 }
 </style>

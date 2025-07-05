@@ -68,9 +68,10 @@ export function fetchUserVideos(userId) {
   return service.get(`/video/user/${userId}`);
 }
 
-export function uploadVideoChunk(formData) {
+export function uploadVideoChunk(formData, onUploadProgress) {
   return service.post('/video/upload-chunk', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
+    headers: { 'Content-Type': 'multipart/form-data' },
+    onUploadProgress
   });
 }
 
