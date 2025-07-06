@@ -24,7 +24,7 @@
           <div class="user-bio-row">
             <span class="user-bio">{{
               userInfo.profile || "这个人很低调，什么都没写~"
-              }}</span>
+            }}</span>
             <van-icon name="edit" class="edit-icon" @click="showEditSignature" />
           </div>
         </div>
@@ -40,7 +40,7 @@
             </div>
             <div v-for="(video, index) in userVideos" :key="index" class="video-item">
               <div class="video-cover">
-                <img :src="video.cover" alt="视频封面" />
+                <img :src="video.coverUrl" alt="视频封面" />
               </div>
               <div class="video-title">{{ video.title }}</div>
             </div>
@@ -430,12 +430,14 @@ async function onAvatarChange(e) {
   color: #fff;
   cursor: pointer;
   transition: box-shadow 0.18s, transform 0.18s;
-  box-shadow: 0 2px 8px rgba(25,137,250,0.10);
+  box-shadow: 0 2px 8px rgba(25, 137, 250, 0.10);
 }
+
 .publish-item:hover {
-  box-shadow: 0 4px 16px rgba(25,137,250,0.18);
+  box-shadow: 0 4px 16px rgba(25, 137, 250, 0.18);
   transform: scale(1.04);
 }
+
 .publish-plus {
   font-size: 38px;
   font-weight: bold;
@@ -443,6 +445,7 @@ async function onAvatarChange(e) {
   margin-bottom: 6px;
   font-family: 'Arial Black', 'Arial', sans-serif;
 }
+
 .publish-item .video-title {
   color: #fff;
   font-size: 13px;

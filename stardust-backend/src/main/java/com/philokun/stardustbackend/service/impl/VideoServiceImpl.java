@@ -88,6 +88,24 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
                 request.getTags() != null && !request.getTags().isEmpty() ? String.join(",", request.getTags()) : "");
         video.setStatus(0); // Set initial status, e.g., 0 for pending review
 
+        // 自动生成并上传封面图
+        try {
+            User user = userMapper.selectById(request.getUserId());
+            String username = user != null ? user.getUsername() : "未知用户";
+            String coverText = (request.getDescription() != null && !request.getDescription().isEmpty())
+                ? request.getDescription() : "未命名视频";
+            File coverFile = generatePlaceholderCover(coverText, username);
+            String coverObjectName = String.format("covers/%s/%s.jpg", request.getUserId(), java.util.UUID.randomUUID());
+            try (InputStream coverInput = new java.io.FileInputStream(coverFile)) {
+                minioUtils.uploadFile(coverInput, coverObjectName, "image/jpeg");
+                video.setCover(coverObjectName);
+            }
+            coverFile.delete();
+        } catch (Exception e) {
+            video.setCover(null);
+            e.printStackTrace();
+        }
+
         // Insert video into database
         boolean success = this.save(video); // Using MyBatis-Plus ServiceImpl's save method
 
