@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 
 /**
  * 视频表
+ * 
  * @TableName video
  */
 @TableName(value = "video")

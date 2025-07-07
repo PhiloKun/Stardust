@@ -17,4 +17,4 @@ public class VideoInfoVO {
     private String avatar;
     private Integer likes;
     private Integer comments;
-} 
+}

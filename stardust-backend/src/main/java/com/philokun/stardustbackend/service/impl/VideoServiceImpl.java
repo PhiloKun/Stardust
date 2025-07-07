@@ -27,6 +27,11 @@ import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.util.Collections;
+import org.jcodec.api.FrameGrab;
+import org.jcodec.api.JCodecException;
+import org.jcodec.common.io.NIOUtils;
+import org.jcodec.common.model.Picture;
+import org.jcodec.scale.AWTUtil;
 
 @Service
 @Slf4j
@@ -42,9 +47,10 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
         System.out.println(request.getTags());
 
         String videoUrl;
+        MultipartFile videoFile = request.getVideoFile();
+        File tempVideoFile = null;
         try {
             // Get file details from the request
-            MultipartFile videoFile = request.getVideoFile();
             if (videoFile == null || videoFile.isEmpty()) {
                 throw new RuntimeException("视频文件不能为空");
             }
@@ -53,7 +59,7 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
             String originalFilename = videoFile.getOriginalFilename();
             String fileExtension = originalFilename != null && originalFilename.contains(".")
                     ? originalFilename.substring(originalFilename.lastIndexOf("."))
-                    : "";
+                    : ".mp4";
             // 使用用户ID和UUID组合生成唯一的文件名，便于管理和追踪
             String objectName = String.format("videos/%s/%s%s", request.getUserId(),
                     java.util.UUID.randomUUID().toString(), fileExtension);
@@ -69,62 +75,73 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
             minioUtils.uploadFile(inputStream, objectName, contentType);
             videoUrl = objectName;
 
+            // 保存上传的视频为临时文件
+            tempVideoFile = File.createTempFile("upload_", fileExtension);
+            videoFile.transferTo(tempVideoFile);
         } catch (MinioException e) {
-            // Log the exception and throw a meaningful runtime exception
-            e.printStackTrace(); // Consider using a logger instead
+            e.printStackTrace();
             throw new RuntimeException("视频上传到存储服务失败: " + e.getMessage());
         } catch (java.io.IOException e) {
-            e.printStackTrace(); // Consider using a logger instead
+            e.printStackTrace();
             throw new RuntimeException("读取视频文件失败: " + e.getMessage());
         }
 
         Video video = new Video();
-        // Copy common properties
         BeanUtils.copyProperties(request, video);
-
-        // Manually set fields that are not directly copied or require transformation
         video.setVideoUrl(videoUrl);
         video.setTags(
                 request.getTags() != null && !request.getTags().isEmpty() ? String.join(",", request.getTags()) : "");
         video.setStatus(0); // Set initial status, e.g., 0 for pending review
 
-        // 自动生成并上传封面图
+        // 自动提取视频第一帧并上传为封面，失败则生成带标题的默认封面
         try {
-            User user = userMapper.selectById(request.getUserId());
-            String username = user != null ? user.getUsername() : "未知用户";
-            String coverText = (request.getDescription() != null && !request.getDescription().isEmpty())
-                ? request.getDescription() : "未命名视频";
-            File coverFile = generatePlaceholderCover(coverText, username);
-            String coverObjectName = String.format("covers/%s/%s.jpg", request.getUserId(), java.util.UUID.randomUUID());
-            try (InputStream coverInput = new java.io.FileInputStream(coverFile)) {
-                minioUtils.uploadFile(coverInput, coverObjectName, "image/jpeg");
-                video.setCover(coverObjectName);
+            File coverFile = null;
+            if (tempVideoFile != null && tempVideoFile.exists()) {
+                try {
+                    // 尝试提取第一帧
+                    FrameGrab grab = FrameGrab.createFrameGrab(NIOUtils.readableChannel(tempVideoFile));
+                    Picture picture = grab.getNativeFrame();
+                    BufferedImage bufferedImage = AWTUtil.toBufferedImage(picture);
+                    coverFile = File.createTempFile("cover_", ".jpg");
+                    ImageIO.write(bufferedImage, "jpg", coverFile);
+                } catch (Exception e) {
+                    // 提取失败则生成默认封面
+                    User user = userMapper.selectById(request.getUserId());
+                    String username = user != null ? user.getUsername() : "未知用户";
+                    String title = (video.getDescription() != null && !video.getDescription().isEmpty())
+                            ? video.getDescription()
+                            : "未命名视频";
+                    coverFile = generatePlaceholderCover(title, username);
+                }
+                String coverObjectName = String.format("covers/%s/%s.jpg", request.getUserId(),
+                        java.util.UUID.randomUUID());
+                try (InputStream coverInput = new java.io.FileInputStream(coverFile)) {
+                    minioUtils.uploadFile(coverInput, coverObjectName, "image/jpeg");
+                    video.setCover(coverObjectName);
+                }
+                coverFile.delete();
             }
-            coverFile.delete();
         } catch (Exception e) {
             video.setCover(null);
             e.printStackTrace();
+        } finally {
+            if (tempVideoFile != null && tempVideoFile.exists()) {
+                tempVideoFile.delete();
+            }
         }
 
         // Insert video into database
-        boolean success = this.save(video); // Using MyBatis-Plus ServiceImpl's save method
-
+        boolean success = this.save(video);
         if (!success) {
-            // Handle insertion failure, maybe throw an exception
             throw new RuntimeException("视频保存失败");
         }
 
-        // Prepare and return VideoPublishVO
         VideoPublishVO videoPublishVO = new VideoPublishVO();
-        videoPublishVO.setId(video.getId()); // Get the generated ID after saving
+        videoPublishVO.setId(video.getId());
         videoPublishVO.setDescription(video.getDescription());
         videoPublishVO.setVideoUrl(video.getVideoUrl());
-        // Note: VideoPublishVO has List<String> tags, but Video entity has String tags.
-        // You might need to convert back if VideoPublishVO is used to display tags.
-        // For now, only setting fields present in both or manually handled.
         videoPublishVO.setUserId(video.getUserId());
         videoPublishVO.setStatus(video.getStatus());
-
         return videoPublishVO;
     }
 
