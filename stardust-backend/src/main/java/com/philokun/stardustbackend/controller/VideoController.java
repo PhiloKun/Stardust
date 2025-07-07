@@ -29,6 +29,7 @@ public class VideoController {
 
     /**
      * 上传视频
+     * 
      * @param request 视频发布请求参数
      * @return 视频发布结果
      */
@@ -64,7 +65,8 @@ public class VideoController {
             @RequestParam("userId") String userId,
             @RequestParam("fileName") String fileName) {
         File chunkDir = new File("/tmp/video_chunks/" + userId + "/" + fileName);
-        if (!chunkDir.exists()) chunkDir.mkdirs();
+        if (!chunkDir.exists())
+            chunkDir.mkdirs();
         File chunkFile = new File(chunkDir, index + ".part");
         try {
             file.transferTo(chunkFile);
@@ -95,6 +97,18 @@ public class VideoController {
         // TODO: 调用视频上传逻辑，将mergedFile作为视频源文件，生成封面并上传到MinIO
         // 合并后可删除chunkDir
         return R.success("合并成功", "merged_" + fileName);
+    }
+
+    /**
+     * 根据ID获取视频详情
+     */
+    @GetMapping("/{id}")
+    public R<VideoInfoVO> getVideoById(@PathVariable String id) {
+        VideoInfoVO videoInfoVO = videoService.getVideoById(id);
+        if (videoInfoVO == null) {
+            return R.error(404, "视频不存在");
+        }
+        return R.success("获取视频详情成功", videoInfoVO);
     }
 
 }

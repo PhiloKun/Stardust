@@ -77,4 +77,8 @@ export function uploadVideoChunk(formData, onUploadProgress) {
 
 export function mergeVideoChunks(data) {
   return service.post('/video/merge-chunks', data);
+}
+
+export function fetchVideoDetail(id) {
+  return service.get(`/video/${id}`);
 } 

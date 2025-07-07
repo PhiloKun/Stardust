@@ -38,7 +38,7 @@
               <div class="publish-plus">+</div>
               <div class="video-title">发布</div>
             </div>
-            <div v-for="(video, index) in userVideos" :key="index" class="video-item">
+            <div v-for="(video, index) in userVideos" :key="index" class="video-item" @click="toPlay(video)">
               <div class="video-cover">
                 <img :src="video.coverUrl" alt="视频封面" />
               </div>
@@ -224,6 +224,10 @@ async function onAvatarChange(e) {
     showToast('头像更新成功');
   }
 }
+
+const toPlay = (video) => {
+  router.push(`/video/${video.id}`);
+};
 </script>
 
 <style scoped>

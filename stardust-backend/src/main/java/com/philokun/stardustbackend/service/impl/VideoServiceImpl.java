@@ -149,10 +149,16 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
     public VideoInfoVO getVideoById(String videoId) {
         Video video = videoMapper.selectById(videoId);
         if (video == null) {
-            return null; // 或者抛出异常
+            return null;
         }
         VideoInfoVO videoInfoVO = new VideoInfoVO();
         BeanUtils.copyProperties(video, videoInfoVO);
+        if (video.getVideoUrl() != null) {
+            videoInfoVO.setVideoUrl(minioUtils.getFileUrl("stardust", video.getVideoUrl()));
+        }
+        if (video.getCover() != null) {
+            videoInfoVO.setCoverUrl(minioUtils.getFileUrl("stardust", video.getCover()));
+        }
         return videoInfoVO;
     }
 
