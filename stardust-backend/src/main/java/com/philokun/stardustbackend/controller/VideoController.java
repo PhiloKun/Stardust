@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.file.Files;
 import org.springframework.web.multipart.MultipartFile;
+import java.util.stream.Collectors;
 
 /**
  * 视频控制器
@@ -109,6 +110,15 @@ public class VideoController {
             return R.error(404, "视频不存在");
         }
         return R.success("获取视频详情成功", videoInfoVO);
+    }
+
+    /**
+     * 批量获取视频详情
+     */
+    @PostMapping("/batch")
+    public R<List<VideoInfoVO>> getVideosByIds(@RequestBody List<String> videoIds) {
+        List<VideoInfoVO> videos = videoService.getVideosByIds(videoIds);
+        return R.success(videos);
     }
 
 }

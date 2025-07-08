@@ -216,6 +216,39 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
         }).collect(Collectors.toList());
     }
 
+    @Override
+    public List<VideoInfoVO> getVideosByIds(List<String> videoIds) {
+        if (videoIds == null || videoIds.isEmpty())
+            return Collections.emptyList();
+        List<Video> videos = videoMapper.selectBatchIds(videoIds);
+        return videos.stream().map(video -> {
+            VideoInfoVO vo = new VideoInfoVO();
+            BeanUtils.copyProperties(video, vo);
+            // 查询作者信息
+            User user = userMapper.selectById(video.getUserId());
+            if (user != null) {
+                vo.setUsername(user.getUsername());
+                vo.setAvatar(user.getAvatar() != null && !user.getAvatar().isEmpty()
+                        ? minioUtils.getFileUrl("stardust", user.getAvatar())
+                        : null);
+            }
+            if (video.getTags() != null && !video.getTags().isEmpty()) {
+                vo.setTags(Arrays.asList(video.getTags().split(",")));
+            } else {
+                vo.setTags(null);
+            }
+            if (video.getCover() != null) {
+                vo.setCoverUrl(minioUtils.getFileUrl("stardust", video.getCover()));
+            }
+            vo.setLikes(0);
+            vo.setComments(0);
+            if (video.getVideoUrl() != null) {
+                vo.setVideoUrl(minioUtils.getFileUrl("stardust", video.getVideoUrl()));
+            }
+            return vo;
+        }).collect(Collectors.toList());
+    }
+
     // 占位图生成方法
     private File generatePlaceholderCover(String title, String username) throws Exception {
         int width = 720, height = 1280;
