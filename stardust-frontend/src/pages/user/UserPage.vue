@@ -21,11 +21,9 @@
         <div class="user-info">
           <h2>{{ userInfo.username }}</h2>
           <p class="user-id">星屑号: {{ userInfo.id }}</p>
-          <div class="user-bio-row">
-            <span class="user-bio">{{
-              userInfo.profile || "这个人很低调，什么都没写~"
-            }}</span>
-            <van-icon name="edit" class="edit-icon" @click="showEditSignature" />
+          <div class="user-bio-row" @click="showEditSignature">
+            <span class="user-bio">{{ userInfo.profile || '这个人很低调，什么都没写~' }}</span>
+            <van-icon name="edit" class="edit-icon" />
           </div>
         </div>
       </div>
@@ -80,10 +78,23 @@
     <SidebarMenu :model-value="showSidebar" @update:model-value="showSidebar = $event" :dark-mode="isDarkMode"
       @update:dark-mode="isDarkMode = $event" />
     <!-- 编辑简介弹窗 -->
-    <van-dialog v-model="showSignatureDialog" title="编辑个人简介" show-cancel-button @confirm="updateSignature">
-      <van-field v-model="tempSignature" type="textarea" placeholder="请输入您的个人简介" rows="3" maxlength="50"
-        show-word-limit />
-    </van-dialog>
+    <van-popup v-model="showSignatureDialog" position="bottom" round>
+      <div class="edit-signature-popup">
+        <div class="popup-title">编辑个性签名</div>
+        <van-field
+          v-model="tempSignature"
+          type="textarea"
+          rows="3"
+          maxlength="50"
+          show-word-limit
+          placeholder="请输入您的个性签名"
+        />
+        <div class="popup-actions">
+          <van-button block @click="showSignatureDialog = false">取消</van-button>
+          <van-button block type="primary" @click="updateSignature">保存</van-button>
+        </div>
+      </div>
+    </van-popup>
     <!-- 设置侧边栏 -->
     <UserSettingSidebar v-model="showSettingSidebar" :dark-mode="isDarkMode" @logout="confirmLogout" />
   </div>
@@ -159,19 +170,28 @@ const updateUserInfo = () => {
 
 // 显示编辑简介弹窗
 const showEditSignature = () => {
-  tempSignature.value = userInfo.value.profile;
-  showSignatureDialog.value = true;
-};
+  console.log('点击了编辑签名');
+  tempSignature.value = userInfo.value.profile || ''
+  showSignatureDialog.value = true
+  console.log('showSignatureDialog.value:', showSignatureDialog.value);
+}
 
 // 更新简介
-const updateSignature = () => {
-  // TODO: 调用后端接口更新用户简介
-  console.log("更新简介:", tempSignature.value);
-  // 更新本地 userInfo
-  userInfo.value.profile = tempSignature.value;
-  // 关闭弹窗
-  showSignatureDialog.value = false;
-};
+const updateSignature = async () => {
+  if (!tempSignature.value.trim()) {
+    showToast('签名不能为空')
+    return
+  }
+  try {
+    await updateUserProfile(userInfo.value.id, tempSignature.value)
+    userInfo.value.profile = tempSignature.value
+    userStore.userInfo.profile = tempSignature.value
+    showToast({ message: '签名更新成功', type: 'success' })
+    showSignatureDialog.value = false
+  } catch (e) {
+    showToast({ message: '签名更新失败', type: 'fail' })
+  }
+}
 
 // 前往登录页
 const toLogin = () => {
@@ -291,6 +311,7 @@ const toPlay = (video) => {
   align-items: center;
   gap: 8px;
   margin-top: 8px;
+  cursor: pointer;
 }
 
 .user-bio {
@@ -303,7 +324,6 @@ const toPlay = (video) => {
 .edit-icon {
   color: #999;
   font-size: 16px;
-  cursor: pointer;
 }
 
 /* 视频标签页 */
@@ -454,5 +474,23 @@ const toPlay = (video) => {
   color: #fff;
   font-size: 13px;
   margin: 0;
+}
+
+.edit-signature-popup {
+  padding: 20px 16px 12px 16px;
+}
+.popup-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 12px;
+  text-align: center;
+}
+.popup-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+.popup-actions .van-button {
+  flex: 1;
 }
 </style>
