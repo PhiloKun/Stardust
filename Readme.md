@@ -6,7 +6,7 @@
 
 ## 项目截图
 
-![星屑](\images\星屑.png)
+![星屑](Stardust\images\星屑.png)
 
 ## 核心创意
 
