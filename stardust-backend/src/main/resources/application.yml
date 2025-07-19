@@ -1,0 +1,61 @@
+server:
+  port: 7070
+spring:
+  application:
+    name: stardust-backend
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/stardust?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: root
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+  servlet:
+    multipart:
+      max-file-size: 500MB # 单个视频文件最大上传大小
+      max-request-size: 500MB # 单次请求最大数据大小(包含视频文件和其他表单数据)
+  profiles:
+    active: prod
+# springdoc-openapi配置
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/**'
+      packages-to-scan: com.philokun.stardustbackend.controller
+# knife4j配置
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+
+# mybatis-plus配置
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+# jwt配置
+jwt:
+  secret: bHjYh5oP6nQ9uKxR3s2v8w1zA7cB4eF0mG7jK5tYpFwE4iDcLqUrXaSdFbGcHeI
+  expiration: 86400000
+# 日志配置
+logging:
+  level:
+    com.philokun.stardustbackend: info
+    org.springframework: info
+# minio配置
+minio:
+  endpoint: http://localhost:9000
+  accessKey: minioadmin
+  secretKey: philokun
+  bucketName: stardust
+
